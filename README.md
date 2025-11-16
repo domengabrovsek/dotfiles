@@ -1,45 +1,38 @@
-# Dotfiles Sync Tool
+# Dotfiles
 
-A simple bash script to sync dotfiles between your home directory and a local dotfiles directory. This tool helps you manage and version control your configuration files.
+Personal configuration files and shell setup.
 
-## Supported Files
+## Structure
 
-- `.aliases`: Shell aliases
-- `.gitconfig`: Git configuration
-- `.zshrc`: Zsh shell configuration
-- `z.sh`: Z shell script
+```text
+dotfiles/
+└── .zsh/
+    ├── personal/  # Personal machine configs
+    ├── work/      # Work machine configs
+    └── shared/    # Shared configs
+```
 
-## Usage
+## Setup
 
-1. Make the script executable:
+Run the install script to set up everything automatically:
+
 ```bash
-chmod +x sync-dotfiles.sh
+cd dotfiles/.zsh
+./install.sh
 ```
 
-2. Run the script:
-```bash
-./sync-dotfiles.sh
-```
+The installer will:
 
-3. Choose sync direction:
-   - Option 1: Sync from HOME to local dotfiles directory
-   - Option 2: Sync from local dotfiles directory to HOME
+- Check and optionally install Oh My Zsh
+- Install required plugins (zsh-autosuggestions, zsh-syntax-highlighting)
+- Install z (directory jumper)
+- Copy configuration to `~/.zsh` and `~/.zshrc`
+- Let you choose between personal or work mode
 
-## Features
+## Documentation
 
-- Bidirectional syncing between HOME and local dotfiles directory
-- Automatic creation of dotfiles directory if it doesn't exist
-- Color-coded output for better visibility
-- Clear feedback on sync status for each file
-
-## Directory Structure
-
-```
-./
-├── sync-dotfiles.sh
-└── dotfiles/
-    ├── .aliases
-    ├── .gitconfig
-    ├── .zshrc
-    └── z.sh
-```
+- [Quick Start Guide](dotfiles/.zsh/QUICKSTART.md)
+- [Zsh Configuration](dotfiles/.zsh/README.md)
+- [AWS CLI Guide](dotfiles/.zsh/AWS_GUIDE.md)
+- [Autosuggestions](dotfiles/.zsh/AUTOSUGGESTIONS.md)
+- [Cheatsheet](dotfiles/.zsh/CHEATSHEET.md)
