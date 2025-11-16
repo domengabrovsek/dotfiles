@@ -19,6 +19,13 @@
 # ============================================================================
 
 # ============================================================================
+# Performance Monitoring
+# ============================================================================
+
+# Capture shell start time for performance monitoring
+shell_start_time=$(($(date +%s%N)/1000000))
+
+# ============================================================================
 # Configuration Mode Selection
 # ============================================================================
 
@@ -44,6 +51,7 @@ plugins=(
   docker
   docker-compose
   npm
+  nvm
   node
   kubectl
   terraform
@@ -139,6 +147,13 @@ zsh_mode() {
 if [[ -f ~/.zshrc.local ]]; then
   source ~/.zshrc.local
 fi
+
+# ============================================================================
+# Performance Monitoring (Optional - uncomment to enable)
+# ============================================================================
+
+# Uncomment to show shell startup time
+echo "Shell loaded in: $(($(date +%s%N)/1000000 - $shell_start_time))ms"
 
 # ============================================================================
 # Welcome Message
