@@ -1,38 +1,52 @@
 # Dotfiles
 
-Personal configuration files and shell setup.
-
-## Structure
-
-```text
-dotfiles/
-└── .zsh/
-    ├── personal/  # Personal machine configs
-    ├── work/      # Work machine configs
-    └── shared/    # Shared configs
-```
+Personal zsh configuration with work/personal mode switching, modern CLI tools, and an fzf-powered help system.
 
 ## Setup
 
-Run the install script to set up everything automatically:
-
 ```bash
-cd dotfiles/.zsh
-./install.sh
+git clone https://github.com/domengabrovsek/dotfiles.git
+cd dotfiles/zsh && ./install.sh
 ```
 
-The installer will:
+The install script is idempotent (safe to re-run) and handles:
 
-- Check and optionally install Oh My Zsh
-- Install required plugins (zsh-autosuggestions, zsh-syntax-highlighting)
-- Install z (directory jumper)
-- Copy configuration to `~/.zsh` and `~/.zshrc`
-- Let you choose between personal or work mode
+1. **Homebrew** - installs if missing
+2. **Oh My Zsh** - installs if missing
+3. **Zsh plugins** - zsh-autosuggestions, zsh-syntax-highlighting
+4. **CLI tools** via Homebrew - fzf, eza, bat, zoxide
+5. **Symlinks** - `~/.zsh` -> repo, `~/.zshrc` -> `~/.zsh/.zshrc`
+6. **Cache directory** - for kubectl/helm completion caching
+
+Open a new terminal or run `exec zsh` when done.
+
+## Structure
+
+```
+dotfiles/
+└── zsh/
+    ├── .zshrc              # Main entry point
+    ├── install.sh          # Setup script
+    ├── shared/             # Common configs (always loaded)
+    │   ├── aliases.zsh     # Git, Docker, K8s, npm, VS Code, etc.
+    │   ├── environment.zsh # Env vars, history, fzf, zoxide
+    │   ├── functions.zsh   # Utility functions + zhelp system
+    │   ├── completions.zsh # Cached completions (kubectl, helm, etc.)
+    │   └── prompt.zsh      # Custom prompt
+    ├── work/               # Work-specific overrides
+    └── personal/           # Personal-specific overrides
+```
+
+## Usage
+
+```bash
+zhelp                # Interactive fuzzy search of all commands
+zhelp docker         # Filter by keyword
+zsh_switch work      # Switch to work mode
+```
 
 ## Documentation
 
-- [Quick Start Guide](dotfiles/.zsh/QUICKSTART.md)
-- [Zsh Configuration](dotfiles/.zsh/README.md)
-- [AWS CLI Guide](dotfiles/.zsh/AWS_GUIDE.md)
-- [Autosuggestions](dotfiles/.zsh/AUTOSUGGESTIONS.md)
-- [Cheatsheet](dotfiles/.zsh/CHEATSHEET.md)
+- [Zsh Configuration](zsh/README.md)
+- [AWS Profile Management](zsh/AWS_GUIDE.md)
+- [Autosuggestions Guide](zsh/AUTOSUGGESTIONS.md)

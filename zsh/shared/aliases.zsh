@@ -12,12 +12,27 @@ alias ...='cd ../..'
 alias ....='cd ../../..'
 alias .....='cd ../../../..'
 
-# List directory contents with colors and human-readable sizes
-alias ls='ls -G'
-alias ll='ls -lh'
-alias la='ls -lAh'
-alias l='ls -CF'
-alias lt='ls -lhtr'  # Sort by time, most recent last
+# List directory contents - use eza if available, otherwise standard ls
+if command -v eza &> /dev/null; then
+  alias ls='eza --icons'
+  alias ll='eza -lh --icons --git'
+  alias la='eza -lah --icons --git'
+  alias l='eza -F'
+  alias lt='eza -lh --icons --git --sort=modified'
+  alias tree='eza --tree --icons --git-ignore'
+else
+  alias ls='ls -G'
+  alias ll='ls -lh'
+  alias la='ls -lAh'
+  alias l='ls -CF'
+  alias lt='ls -lhtr'
+fi
+
+# Modern cat replacement (if bat is installed)
+if command -v bat &> /dev/null; then
+  alias cat='bat --paging=never'
+  alias catp='bat'  # bat with pager
+fi
 
 # ============================================================================
 # File Operations
@@ -59,6 +74,12 @@ alias gm='git merge'
 alias gr='git rebase'
 alias grc='git rebase --continue'
 alias gra='git rebase --abort'
+
+# Modern git commands (git 2.23+ replacements for checkout)
+alias gsw='git switch'
+alias gswc='git switch -c'
+alias grs='git restore'
+alias grss='git restore --staged'
 
 # ============================================================================
 # Docker Aliases
@@ -110,9 +131,6 @@ alias kdp='kubectl describe pod'
 alias kds='kubectl describe service'
 alias kdd='kubectl describe deployment'
 
-# Logs
-alias klp='kubectl logs -f pod/'
-
 # ============================================================================
 # NPM / Node.js Aliases
 # ============================================================================
@@ -128,28 +146,6 @@ alias nstart='npm start'
 alias ntest='npm test'
 alias nbuild='npm run build'
 alias ndev='npm run dev'
-
-# pnpm
-alias pi='pnpm install'
-alias pa='pnpm add'
-alias pad='pnpm add -D'
-alias pr='pnpm remove'
-alias prun='pnpm run'
-alias pstart='pnpm start'
-alias ptest='pnpm test'
-alias pbuild='pnpm run build'
-alias pdev='pnpm run dev'
-
-# Yarn (if needed)
-alias yi='yarn install'
-alias ya='yarn add'
-alias yad='yarn add --dev'
-alias yr='yarn remove'
-alias yrun='yarn run'
-alias ystart='yarn start'
-alias ytest='yarn test'
-alias ybuild='yarn build'
-alias ydev='yarn dev'
 
 # ============================================================================
 # AWS CLI Aliases
@@ -189,7 +185,7 @@ alias tfw='terraform workspace'
 
 alias path='echo $PATH | tr ":" "\n"'
 alias reload='source ~/.zshrc'
-alias zshrc='${EDITOR} ~/.zshrc'
+alias zshrc='code ~/.zshrc'
 
 # Process management
 alias psg='ps aux | grep -v grep | grep -i -e VSZ -e'
@@ -198,6 +194,7 @@ alias psgrep='ps aux | grep'
 # Network
 alias ip='ifconfig | grep "inet " | grep -v 127.0.0.1'
 alias ports='lsof -i -P | grep LISTEN'
+alias flushdns='sudo dscacheutil -flushcache && sudo killall -HUP mDNSResponder && echo "DNS cache flushed"'
 
 # Disk usage
 alias dus='du -sh * | sort -h'
@@ -208,7 +205,7 @@ alias df='df -h'
 # ============================================================================
 
 # Quick edit hosts file
-alias hosts='sudo ${EDITOR} /etc/hosts'
+alias hosts='sudo code /etc/hosts'
 
 # Clear screen
 alias c='clear'
@@ -219,10 +216,16 @@ alias grep='grep --color=auto'
 alias fgrep='fgrep --color=auto'
 alias egrep='egrep --color=auto'
 
-# Human readable sizes in commands
-alias free='free -h'
-
 # Time and date
 alias now='date +"%T"'
 alias nowdate='date +"%Y-%m-%d"'
 alias nowtime='date +"%Y-%m-%d %T"'
+
+# ============================================================================
+# VS Code
+# ============================================================================
+
+alias c.='code .'
+alias cr='code -r .'            # Reuse existing window
+alias cdiff='code --diff'       # VS Code diff viewer
+alias cext='code --list-extensions'  # List installed extensions
