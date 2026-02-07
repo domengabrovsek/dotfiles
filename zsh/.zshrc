@@ -23,7 +23,16 @@
 # ============================================================================
 
 # Capture shell start time for performance monitoring
-shell_start_time=$(($(date +%s%N)/1000000))
+zmodload zsh/datetime
+shell_start_time=$EPOCHREALTIME
+
+# ============================================================================
+# Homebrew Environment (must be early for PATH setup)
+# ============================================================================
+
+if [[ -f /opt/homebrew/bin/brew ]]; then
+  eval "$(/opt/homebrew/bin/brew shellenv)"
+fi
 
 # ============================================================================
 # Configuration Mode Selection
@@ -44,6 +53,11 @@ export ZSH="$HOME/.oh-my-zsh"
 # Set to empty or "random" if you want Oh My Zsh themes instead
 ZSH_THEME=""
 
+# Oh My Zsh NVM lazy loading (must be set before plugins are loaded)
+zstyle ':omz:plugins:nvm' lazy yes
+zstyle ':omz:plugins:nvm' autoload yes
+zstyle ':omz:plugins:nvm' silent-autoload yes
+
 # Oh My Zsh plugins
 # Note: completions are also managed in shared/completions.zsh
 plugins=(
@@ -52,7 +66,6 @@ plugins=(
   docker-compose
   npm
   nvm
-  node
   kubectl
   terraform
   zsh-autosuggestions
@@ -152,8 +165,8 @@ fi
 # Performance Monitoring (Optional - uncomment to enable)
 # ============================================================================
 
-# Uncomment to show shell startup time
-echo "Shell loaded in: $(($(date +%s%N)/1000000 - $shell_start_time))ms"
+# Show shell startup time
+printf "Shell loaded in: %.0fms\n" $(( ($EPOCHREALTIME - shell_start_time) * 1000 ))
 
 # ============================================================================
 # Welcome Message
@@ -167,6 +180,3 @@ if [[ -z "$ZSH_DISABLE_WELCOME" ]]; then
     zsh_welcome
   fi
 fi
-
-# Alternative: Simple welcome message (uncomment and disable zsh_welcome above)
-# echo "👋 Welcome! Running in $ZSH_CONFIG_MODE mode. Type 'zhelp' for help."

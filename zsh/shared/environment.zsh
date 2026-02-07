@@ -18,16 +18,16 @@ esac
 # Editor Configuration
 # ============================================================================
 
-export EDITOR='vim'
-export VISUAL='vim'
+export EDITOR='code -w'
+export VISUAL='code -w'
 
 # ============================================================================
 # History Configuration
 # ============================================================================
 
 export HISTFILE=~/.zsh_history
-export HISTSIZE=10000
-export SAVEHIST=10000
+export HISTSIZE=50000
+export SAVEHIST=50000
 
 # Share history between sessions
 setopt SHARE_HISTORY
@@ -43,6 +43,10 @@ setopt HIST_REDUCE_BLANKS
 setopt HIST_IGNORE_SPACE
 # Show command with history expansion before running it
 setopt HIST_VERIFY
+# Don't show duplicate entries when searching history
+setopt HIST_FIND_NO_DUPS
+# Expire duplicate entries first when trimming history
+setopt HIST_EXPIRE_DUPS_FIRST
 
 # ============================================================================
 # Directory Navigation
@@ -82,28 +86,8 @@ setopt NOMATCH
 # ============================================================================
 
 export NVM_DIR="$HOME/.nvm"
-
-# Automatically call nvm use when entering a directory with .nvmrc
-autoload -U add-zsh-hook
-load-nvmrc() {
-  local node_version="$(nvm version)"
-  local nvmrc_path="$(nvm_find_nvmrc)"
-
-  if [ -n "$nvmrc_path" ]; then
-    local nvmrc_node_version=$(nvm version "$(cat "${nvmrc_path}")")
-
-    if [ "$nvmrc_node_version" = "N/A" ]; then
-      nvm install
-    elif [ "$nvmrc_node_version" != "$node_version" ]; then
-      nvm use
-    fi
-  elif [ "$node_version" != "$(nvm version default)" ]; then
-    echo "Reverting to nvm default version"
-    nvm use default
-  fi
-}
-add-zsh-hook chpwd load-nvmrc
-load-nvmrc
+# NVM loading and .nvmrc auto-switching handled by Oh My Zsh nvm plugin
+# with lazy loading (see .zshrc zstyle configuration)
 
 # ============================================================================
 # Docker Configuration
@@ -156,11 +140,12 @@ export LESS_TERMCAP_ue=$'\E[0m'        # reset underline
 export GREP_COLOR='1;32'
 
 # ============================================================================
-# Z (Jump Around)
+# Smart Directory Jumping (zoxide or z.sh fallback)
 # ============================================================================
 
-# Load z for quick directory navigation
-if [[ -f "$HOME/z.sh" ]]; then
+if command -v zoxide >/dev/null 2>&1; then
+  eval "$(zoxide init zsh)"
+elif [[ -f "$HOME/z.sh" ]]; then
   source "$HOME/z.sh"
 fi
 
@@ -179,9 +164,6 @@ bindkey '^[[C' forward-char              # Right arrow
 bindkey '^E' end-of-line                 # Ctrl+E
 bindkey '^[[1;5C' forward-word           # Ctrl+Right arrow (accept word)
 
-# Alternative: Accept with Ctrl+Space (uncomment if preferred)
-# bindkey '^ ' autosuggest-accept
-
 # Clear autosuggestion with Ctrl+U
 bindkey '^U' autosuggest-clear
 
@@ -190,3 +172,15 @@ ZSH_AUTOSUGGEST_USE_ASYNC=true
 
 # Buffer max size for autosuggestions
 ZSH_AUTOSUGGEST_BUFFER_MAX_SIZE=20
+
+# ============================================================================
+# fzf Configuration (fuzzy finder)
+# ============================================================================
+
+if command -v fzf >/dev/null 2>&1; then
+  # Set up fzf key bindings (Ctrl-R for history, Ctrl-T for files, Alt-C for cd)
+  source <(fzf --zsh)
+
+  # Default options
+  export FZF_DEFAULT_OPTS='--height 40% --layout=reverse --border'
+fi

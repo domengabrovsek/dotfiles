@@ -7,7 +7,7 @@ Enhanced AWS experience with profile switching and visual indicators.
 ### 1. **AWS Profile in Prompt**
 Your current AWS profile is always visible in your prompt:
 ```
-~/my-project ☁︎ domengabrovsek ⬢ v22.14.0 →
+~/my-project ☁︎ my-profile ⬢ v22.14.0 →
 ```
 
 The cloud icon `☁︎` appears when `AWS_PROFILE` is set, showing you which profile you're using.
@@ -20,13 +20,6 @@ Automatically verifies credentials when switching profiles.
 
 ## 🚀 Quick Start
 
-### View Your Profiles
-
-Your configured AWS profiles:
-- `domengabrovsek`
-- `tf-domengabrovsek`
-- `tf-shupak-bot`
-
 ### Switch Profiles Interactively
 
 ```bash
@@ -35,29 +28,14 @@ awsp
 aws_switch
 ```
 
-This shows an interactive menu:
-```
-☁️  Available AWS Profiles:
-
-   Current: domengabrovsek (active)
-
-    1) domengabrovsek ✓
-    2) tf-domengabrovsek
-    3) tf-shupak-bot
-
-   0) Clear profile (unset AWS_PROFILE)
-
-Select profile number (or press Enter to cancel):
-```
-
-Just type the number and press Enter!
+This shows an interactive numbered menu of all profiles from `~/.aws/config` and `~/.aws/credentials`. Select by number.
 
 ### Switch Directly to a Profile
 
 ```bash
-awsp domengabrovsek
+awsp my-profile
 # or
-aws_switch tf-domengabrovsek
+aws_switch my-profile
 ```
 
 ### Check Current Profile
@@ -68,16 +46,7 @@ awsc
 aws_current
 ```
 
-Output:
-```
-Current AWS Profile: domengabrovsek
-
-{
-    "UserId": "...",
-    "Account": "123456789012",
-    "Arn": "arn:aws:iam::123456789012:user/domen"
-}
-```
+Shows current profile name and verifies credentials via `sts get-caller-identity`.
 
 ### Clear Profile
 
@@ -104,72 +73,19 @@ unset AWS_PROFILE
 
 ## 💡 Usage Examples
 
-### Example 1: Interactive Switching
-```bash
-# Open the menu
-$ awsp
+### Interactive Switching
 
-☁️  Available AWS Profiles:
+`awsp` shows a numbered menu. Pick a number, credentials are verified automatically. Your prompt updates to show `☁︎ profile-name`.
 
-   Current: domengabrovsek (active)
-
-    1) domengabrovsek ✓
-    2) tf-domengabrovsek
-    3) tf-shupak-bot
-
-   0) Clear profile (unset AWS_PROFILE)
-
-Select profile number (or press Enter to cancel): 2
-
-✓ Switched to AWS profile: tf-domengabrovsek
-
-Verifying credentials...
-{
-    "UserId": "...",
-    "Account": "...",
-    "Arn": "..."
-}
-
-✓ Profile verified successfully!
-```
-
-Your prompt now shows: `~/project ☁︎ tf-domengabrovsek →`
-
-### Example 2: Direct Switch
-```bash
-$ awsp domengabrovsek
-✓ Switched to AWS profile: domengabrovsek
-{
-    "UserId": "...",
-    "Account": "...",
-    "Arn": "..."
-}
-```
-
-### Example 3: Check Current Profile
-```bash
-$ awsc
-Current AWS Profile: domengabrovsek
-
-{
-    "UserId": "...",
-    "Account": "123456789012",
-    "Arn": "arn:aws:iam::123456789012:user/domen"
-}
-```
-
-### Example 4: Working with Multiple Terminals
-When you switch profiles, it only affects the current terminal session. Other terminals keep their own profiles. This is perfect for working with multiple AWS accounts simultaneously!
+### Direct Switch
 
 ```bash
-# Terminal 1
-$ awsp domengabrovsek
-# Work with personal account
-
-# Terminal 2
-$ awsp tf-domengabrovsek
-# Work with work account
+awsp my-profile    # Switch directly, credentials verified
 ```
+
+### Multiple Terminals
+
+Profile switching only affects the current terminal session. Other terminals keep their own profiles - useful for working with multiple AWS accounts simultaneously.
 
 ## 🎨 Prompt Customization
 
@@ -210,7 +126,7 @@ Replace `☁︎` with your preferred icon:
 
 Add to `~/.zsh/work/environment.zsh`:
 ```bash
-export AWS_PROFILE=tf-domengabrovsek
+export AWS_PROFILE=my-work-profile
 ```
 
 Now when you switch to work mode, this profile is automatically set!
@@ -219,26 +135,16 @@ Now when you switch to work mode, this profile is automatically set!
 
 Add to `~/.zshrc.local`:
 ```bash
-export AWS_PROFILE=domengabrovsek
+export AWS_PROFILE=my-default-profile
 ```
 
 ### Create Profile-Specific Aliases
 
 Add to `~/.zsh/work/aliases.zsh`:
 ```bash
-alias aws-work='aws_switch tf-domengabrovsek'
-alias aws-bot='aws_switch tf-shupak-bot'
+alias aws-work='aws_switch my-work-profile'
+alias aws-staging='aws_switch my-staging-profile'
 ```
-
-### Quick Profile Switching with Ctrl+A
-
-Add to `~/.zsh/shared/environment.zsh`:
-```bash
-# Bind Ctrl+A to quickly switch AWS profile
-bindkey -s '^A' 'awsp\n'
-```
-
-Now pressing `Ctrl+A` opens the profile switcher!
 
 ## 🛡️ Security Best Practices
 
@@ -246,10 +152,7 @@ Now pressing `Ctrl+A` opens the profile switcher!
    - Your `~/.aws/credentials` file is local only
    - The profile switcher only changes the `AWS_PROFILE` environment variable
 
-2. **Use separate profiles for different environments**
-   - Personal: `domengabrovsek`
-   - Terraform: `tf-domengabrovsek`
-   - Bot: `tf-shupak-bot`
+2. **Use separate profiles for different environments** (personal, work, staging, CI, etc.)
 
 3. **Verify profile after switching**
    - Use `awsc` to confirm you're using the right profile

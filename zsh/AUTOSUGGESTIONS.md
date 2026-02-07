@@ -86,12 +86,6 @@ ZSH_AUTOSUGGEST_HIGHLIGHT_STYLE='fg=8'  # Different gray
 ZSH_AUTOSUGGEST_STRATEGY=(history)
 ```
 
-**Accept with Ctrl+Space instead:**
-```bash
-# Add to ~/.zshrc.local
-bindkey '^ ' autosuggest-accept
-```
-
 **Disable for specific commands:**
 ```bash
 # Add to ~/.zshrc.local

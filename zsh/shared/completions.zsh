@@ -70,8 +70,8 @@ zstyle ':completion:*:approximate:*' max-errors 1 numeric
 # Complete . and .. special directories
 zstyle ':completion:*' special-dirs true
 
-# Enable aliases to be completed
-setopt COMPLETE_ALIASES
+# Note: COMPLETE_ALIASES removed - without it, alias expansion happens before
+# completion lookup, so git aliases (gs, ga, etc.) get proper git completions
 
 # ============================================================================
 # Docker Completion
@@ -113,7 +113,12 @@ fi
 # ============================================================================
 
 if command -v kubectl &> /dev/null; then
-  source <(kubectl completion zsh)
+  # Cache kubectl completions to file (regenerates when binary changes)
+  _kubectl_comp_cache="${HOME}/.zsh/cache/kubectl_completion.zsh"
+  if [[ ! -f "$_kubectl_comp_cache" || "$(which kubectl)" -nt "$_kubectl_comp_cache" ]]; then
+    kubectl completion zsh > "$_kubectl_comp_cache" 2>/dev/null
+  fi
+  [[ -f "$_kubectl_comp_cache" ]] && source "$_kubectl_comp_cache"
 
   # Alias completion for k=kubectl
   compdef k=kubectl
@@ -165,38 +170,8 @@ if [[ -f "/opt/homebrew/Caskroom/google-cloud-sdk/latest/google-cloud-sdk/comple
 fi
 
 # ============================================================================
-# Git Completion
+# NPM Completion
 # ============================================================================
-
-# Git completions (usually provided by oh-my-zsh git plugin, but ensuring it's loaded)
-# This will be handled by oh-my-zsh plugins
-
-# ============================================================================
-# Node/NPM/NVM Completion
-# ============================================================================
-
-# NVM completion
-export NVM_DIR="$HOME/.nvm"
-
-# Load NVM (Homebrew installation)
-if [[ -s "/opt/homebrew/opt/nvm/nvm.sh" ]]; then
-  source "/opt/homebrew/opt/nvm/nvm.sh"
-fi
-
-# Load NVM (standard installation)
-if [[ -s "$NVM_DIR/nvm.sh" ]]; then
-  source "$NVM_DIR/nvm.sh"
-fi
-
-# Load NVM bash completion (Homebrew)
-if [[ -s "/opt/homebrew/opt/nvm/etc/bash_completion.d/nvm" ]]; then
-  source "/opt/homebrew/opt/nvm/etc/bash_completion.d/nvm"
-fi
-
-# Load NVM bash completion (standard)
-if [[ -s "$NVM_DIR/bash_completion" ]]; then
-  source "$NVM_DIR/bash_completion"
-fi
 
 # NPM completion
 if command -v npm &> /dev/null; then
@@ -220,7 +195,12 @@ fi
 
 # Helm completion
 if command -v helm &> /dev/null; then
-  source <(helm completion zsh)
+  # Cache helm completions to file (regenerates when binary changes)
+  _helm_comp_cache="${HOME}/.zsh/cache/helm_completion.zsh"
+  if [[ ! -f "$_helm_comp_cache" || "$(which helm)" -nt "$_helm_comp_cache" ]]; then
+    helm completion zsh > "$_helm_comp_cache" 2>/dev/null
+  fi
+  [[ -f "$_helm_comp_cache" ]] && source "$_helm_comp_cache"
 fi
 
 # ============================================================================
