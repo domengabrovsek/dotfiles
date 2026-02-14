@@ -41,11 +41,34 @@ function aws_profile() {
 }
 
 # ============================================================================
+# GCP Profile Display (cached to avoid slow gcloud calls on every prompt)
+# ============================================================================
+
+_cached_gcp_config=""
+
+_update_gcp_config_cache() {
+  if command -v gcloud >/dev/null 2>&1; then
+    _cached_gcp_config=$(gcloud config configurations list --filter="IS_ACTIVE=true" --format="value(name)" 2>/dev/null)
+  else
+    _cached_gcp_config=""
+  fi
+}
+
+function gcp_profile() {
+  if [[ -n "$_cached_gcp_config" && "$_cached_gcp_config" != "default" ]]; then
+    echo "%F{33}gcp:${_cached_gcp_config}%f "
+  fi
+}
+
+# Initial cache load
+_update_gcp_config_cache
+
+# ============================================================================
 # Prompt Definition
 # ============================================================================
 
 # Custom prompt - using full path (%~ instead of %c) and git icon (±)
-PROMPT='%{$fg[cyan]%}%~%{$reset_color%} $(git_prompt_info)$(aws_profile)$(node_version) %{$fg[blue]%}→%{$reset_color%} '
+PROMPT='%{$fg[cyan]%}%~%{$reset_color%} $(git_prompt_info)$(aws_profile)$(gcp_profile)$(node_version) %{$fg[blue]%}→%{$reset_color%} '
 
 # Git prompt settings with icon
 ZSH_THEME_GIT_PROMPT_PREFIX="%{$fg_bold[blue]%}±(%{$fg[red]%}"
