@@ -165,6 +165,8 @@ alias gcp-whoami='gcloud config get-value account'
 alias gcp-project='gcloud config get-value project'
 alias gcp-projects='gcloud projects list'
 alias gcp-set-project='gcloud config set project'
+alias gcpp='gcp_switch'   # Quick profile switcher (like awsp)
+alias gcpc='gcp_current'  # Show current profile (like awsc)
 
 # ============================================================================
 # Terraform Aliases

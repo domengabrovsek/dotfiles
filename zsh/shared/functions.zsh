@@ -84,6 +84,9 @@ _zhelp_data() {
 [gcp]       gcp-whoami    gcloud config get-value account
 [gcp]       gcp-project   gcloud config get-value project
 [gcp]       gcp-projects  gcloud projects list
+[gcp]       gcpp / gcpc   switch profile / show current
+[gcp]       gcp_switch    interactive profile switcher
+[gcp]       gcp_current   show current profile + identity
 [nav]       .. / ... / ....  cd up 1/2/3 levels
 [nav]       z <dir>       smart jump (zoxide)
 [nav]       zi            interactive dir picker (zoxide+fzf)
@@ -625,6 +628,103 @@ s3_list_buckets() {
     bucket_size=$(aws s3 ls s3://$bucket_name --recursive --summarize | grep "Total Size" | awk '{print $3}')
     echo "$bucket_name: $bucket_size bytes"
   done
+}
+
+# ============================================================================
+# GCP Functions
+# ============================================================================
+
+# Switch GCP configuration with interactive selection
+gcp_switch() {
+  local configs=()
+  local active_config
+
+  # Get list of configurations
+  while IFS= read -r line; do
+    if [[ -n "$line" ]]; then
+      configs+=("$line")
+    fi
+  done < <(gcloud config configurations list --format="value(name)" 2>/dev/null)
+
+  active_config=$(gcloud config configurations list --filter="IS_ACTIVE=true" --format="value(name)" 2>/dev/null)
+
+  # If no argument provided, show interactive selection
+  if [[ -z "$1" ]]; then
+    if [[ ${#configs[@]} -eq 0 ]]; then
+      echo "No GCP configurations found."
+      echo ""
+      echo "Create one with: gcloud config configurations create <name>"
+      return 1
+    fi
+
+    echo "GCP Configurations:"
+    echo ""
+
+    if [[ -n "$active_config" ]]; then
+      local active_project=$(gcloud config get-value project 2>/dev/null)
+      echo "   Current: \x1b[32m${active_config}\x1b[0m (project: ${active_project:-none})"
+    fi
+    echo ""
+
+    # List all configs with numbers
+    local i=1
+    for config in "${configs[@]}"; do
+      local project=$(gcloud config configurations describe "$config" --format="value(properties.core.project)" 2>/dev/null)
+      if [[ "$config" == "$active_config" ]]; then
+        printf "   \x1b[32m%2d) %s (project: %s) ✓\x1b[0m\n" $i "$config" "${project:-none}"
+      else
+        printf "   %2d) %s (project: %s)\n" $i "$config" "${project:-none}"
+      fi
+      ((i++))
+    done
+
+    echo ""
+    echo -n "Select configuration number (or press Enter to cancel): "
+    read selection
+
+    # Handle selection
+    if [[ -z "$selection" ]]; then
+      echo "Cancelled."
+      return 0
+    elif [[ "$selection" =~ ^[0-9]+$ ]] && [[ $selection -ge 1 ]] && [[ $selection -le ${#configs[@]} ]]; then
+      local selected="${configs[$selection]}"
+      gcloud config configurations activate "$selected" 2>/dev/null
+      _update_gcp_config_cache
+      echo ""
+      echo "Switched to GCP configuration: $selected"
+      gcp_current
+    else
+      echo "Invalid selection: $selection"
+      return 1
+    fi
+  else
+    # Direct config switch
+    if gcloud config configurations activate "$1" 2>/dev/null; then
+      _update_gcp_config_cache
+      echo "Switched to GCP configuration: $1"
+      gcp_current
+    else
+      echo "Configuration '$1' not found."
+      echo ""
+      echo "Available configurations:"
+      gcloud config configurations list --format="table(name, is_active, properties.core.project, properties.core.account)" 2>/dev/null
+      return 1
+    fi
+  fi
+}
+
+# Show current GCP profile and identity
+gcp_current() {
+  local config=$(gcloud config configurations list --filter="IS_ACTIVE=true" --format="value(name)" 2>/dev/null)
+  local project=$(gcloud config get-value project 2>/dev/null)
+  local account=$(gcloud config get-value account 2>/dev/null)
+  local region=$(gcloud config get-value compute/region 2>/dev/null)
+
+  echo ""
+  echo "GCP Configuration: ${config:-default}"
+  echo "  Account: ${account:-(not set)}"
+  echo "  Project: ${project:-(not set)}"
+  echo "  Region:  ${region:-(not set)}"
 }
 
 # ============================================================================
