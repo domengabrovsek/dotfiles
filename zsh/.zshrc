@@ -105,6 +105,7 @@ case "$ZSH_CONFIG_MODE" in
     [[ -f ~/.zsh/work/environment.zsh ]] && source ~/.zsh/work/environment.zsh
     [[ -f ~/.zsh/work/aliases.zsh ]] && source ~/.zsh/work/aliases.zsh
     [[ -f ~/.zsh/work/functions.zsh ]] && source ~/.zsh/work/functions.zsh
+    [[ -f ~/.zsh/work/gcp-debug.zsh ]] && source ~/.zsh/work/gcp-debug.zsh
     ;;
   personal)
     [[ -f ~/.zsh/personal/environment.zsh ]] && source ~/.zsh/personal/environment.zsh

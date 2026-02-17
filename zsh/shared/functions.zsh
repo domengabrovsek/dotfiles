@@ -30,7 +30,7 @@ _zhelp_data() {
 [git]       qcommit <msg> git add . && commit -m
 [git]       qpush <msg>   git add . && commit && push
 [git]       git_tree      log --graph --oneline --all
-[git]       git_clean_branches  delete merged branches
+[git]       git_clean_branches  delete merged branches (keeps main/master/develop/keep/*)
 [git]       git_undo_commit     reset --soft HEAD~1
 [git]       fbr           fzf branch switcher
 [git]       flog          fzf git log browser
@@ -87,6 +87,23 @@ _zhelp_data() {
 [gcp]       gcpp / gcpc   switch profile / show current
 [gcp]       gcp_switch    interactive profile switcher
 [gcp]       gcp_current   show current profile + identity
+[gcp-debug] cr-find       search Cloud Run service by name/UUID
+[gcp-debug] cr-list       list Cloud Run services
+[gcp-debug] cr-image      get Docker image + SHA for a service
+[gcp-debug] cr-sha        get just the image SHA digest
+[gcp-debug] cr-revisions  list recent revisions
+[gcp-debug] cr-describe   full service description
+[gcp-debug] cr-env        show environment variables
+[gcp-debug] cr-resources  show CPU/memory/concurrency
+[gcp-debug] cr-traffic    show traffic splitting
+[gcp-debug] cr-url        get service URL
+[gcp-debug] cr-logs       view recent logs (1h)
+[gcp-debug] cr-errors     view error logs (24h)
+[gcp-debug] cr-info       full summary (image, URL, resources)
+[gcp-debug] ar-tags       list Artifact Registry image tags
+[gcp-debug] ar-images     list images in AR repo
+[gcp-debug] gcp-logs      quick log search
+[gcp-debug] gcp-debug-help  show all GCP debug commands
 [nav]       .. / ... / ....  cd up 1/2/3 levels
 [nav]       z <dir>       smart jump (zoxide)
 [nav]       zi            interactive dir picker (zoxide+fzf)
@@ -377,9 +394,22 @@ git_tree() {
   git log --graph --oneline --all --decorate
 }
 
-# Delete merged branches
+# Delete merged branches (keeps main, master, develop, current branch, and keep/*)
 git_clean_branches() {
-  git branch --merged | grep -v "\*" | grep -v "main" | grep -v "master" | xargs -n 1 git branch -d
+  local branches
+  branches=$(git branch --merged | grep -v "\*" | grep -v -E "^\s*(main|master|develop)$" | grep -v -E "^\s*keep")
+
+  if [[ -z "$branches" ]]; then
+    echo "No branches to delete."
+    return 0
+  fi
+
+  echo "Branches to delete:"
+  echo "$branches"
+  echo ""
+  read -q "confirm?Delete these branches? (y/n) " || { echo ""; return 0; }
+  echo ""
+  echo "$branches" | xargs -n 1 git branch -d
 }
 
 # Undo last commit (keep changes)

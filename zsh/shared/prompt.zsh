@@ -67,8 +67,8 @@ _update_gcp_config_cache
 # Prompt Definition
 # ============================================================================
 
-# Custom prompt - using full path (%~ instead of %c) and git icon (±)
-PROMPT='%{$fg[cyan]%}%~%{$reset_color%} $(git_prompt_info)$(aws_profile)$(gcp_profile)$(node_version) %{$fg[blue]%}→%{$reset_color%} '
+# Custom prompt - showing last directory (%1~) and git icon (±)
+PROMPT='%{$fg[cyan]%}%1~%{$reset_color%} $(git_prompt_info)$(aws_profile)$(gcp_profile)$(node_version) %{$fg[blue]%}→%{$reset_color%} '
 
 # Git prompt settings with icon
 ZSH_THEME_GIT_PROMPT_PREFIX="%{$fg_bold[blue]%}±(%{$fg[red]%}"
