@@ -7,12 +7,38 @@
 # Path Configuration
 # ============================================================================
 
-# pnpm
-export PNPM_HOME="$HOME/Library/pnpm"
-case ":$PATH:" in
-  *":$PNPM_HOME:"*) ;;
-  *) export PATH="$PNPM_HOME:$PATH" ;;
-esac
+# Ensure common tool directories are in PATH (deduplicated)
+# Order matters: earlier entries take priority
+_path_prepend() {
+  for dir in "$@"; do
+    if [[ -d "$dir" ]]; then
+      case ":$PATH:" in
+        *":$dir:"*) ;;
+        *) export PATH="$dir:$PATH" ;;
+      esac
+    fi
+  done
+}
+
+_path_prepend \
+  /usr/local/bin \
+  "$HOME/.local/bin" \
+  "$HOME/.docker/bin" \
+  /Applications/Docker.app/Contents/Resources/bin
+
+unfunction _path_prepend
+
+# ============================================================================
+# Google Cloud SDK
+# ============================================================================
+
+# Source gcloud PATH and completions (installed via brew --cask google-cloud-sdk)
+if [[ -f /opt/homebrew/share/google-cloud-sdk/path.zsh.inc ]]; then
+  source /opt/homebrew/share/google-cloud-sdk/path.zsh.inc
+fi
+if [[ -f /opt/homebrew/share/google-cloud-sdk/completion.zsh.inc ]]; then
+  source /opt/homebrew/share/google-cloud-sdk/completion.zsh.inc
+fi
 
 # ============================================================================
 # Editor Configuration

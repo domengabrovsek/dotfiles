@@ -203,12 +203,3 @@ if command -v helm &> /dev/null; then
   [[ -f "$_helm_comp_cache" ]] && source "$_helm_comp_cache"
 fi
 
-# ============================================================================
-# pnpm
-# ============================================================================
-
-# pnpm completions
-if command -v pnpm &> /dev/null; then
-  # Setup completion for pnpm
-  [[ -f ~/.config/tabtab/zsh/__tabtab.zsh ]] && . ~/.config/tabtab/zsh/__tabtab.zsh || true
-fi
