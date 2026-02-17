@@ -1,6 +1,6 @@
 # Dotfiles
 
-Personal zsh configuration with work/personal mode switching, modern CLI tools, and an fzf-powered help system.
+Personal zsh configuration with modern CLI tools and an fzf-powered help system.
 
 ## Setup
 
@@ -27,14 +27,13 @@ dotfiles/
 └── zsh/
     ├── .zshrc              # Main entry point
     ├── install.sh          # Setup script
-    ├── shared/             # Common configs (always loaded)
-    │   ├── aliases.zsh     # Git, Docker, K8s, npm, VS Code, etc.
-    │   ├── environment.zsh # Env vars, history, fzf, zoxide
-    │   ├── functions.zsh   # Utility functions + zhelp system
-    │   ├── completions.zsh # Cached completions (kubectl, helm, etc.)
-    │   └── prompt.zsh      # Custom prompt
-    ├── work/               # Work-specific overrides
-    └── personal/           # Personal-specific overrides
+    └── modules/            # All configuration modules
+        ├── aliases.zsh     # Git, Docker, K8s, npm, VS Code, etc.
+        ├── environment.zsh # Env vars, history, fzf, zoxide
+        ├── functions.zsh   # Utility functions + zhelp system
+        ├── completions.zsh # Cached completions (kubectl, helm, etc.)
+        ├── prompt.zsh      # Custom prompt
+        └── gcp.zsh         # GCP Cloud Run debugging shortcuts
 ```
 
 ## Usage
@@ -42,7 +41,7 @@ dotfiles/
 ```bash
 zhelp                # Interactive fuzzy search of all commands
 zhelp docker         # Filter by keyword
-zsh_switch work      # Switch to work mode
+zhelp gcp            # Search GCP-related commands
 ```
 
 ## Documentation
