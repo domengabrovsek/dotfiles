@@ -1,7 +1,6 @@
 # ============================================================================
 # Custom Functions
 # ============================================================================
-# Useful shell functions shared across work and personal setups
 
 # ============================================================================
 # Help System
@@ -87,23 +86,23 @@ _zhelp_data() {
 [gcp]       gcpp / gcpc   switch profile / show current
 [gcp]       gcp_switch    interactive profile switcher
 [gcp]       gcp_current   show current profile + identity
-[gcp-debug] cr-find       search Cloud Run service by name/UUID
-[gcp-debug] cr-list       list Cloud Run services
-[gcp-debug] cr-image      get Docker image + SHA for a service
-[gcp-debug] cr-sha        get just the image SHA digest
-[gcp-debug] cr-revisions  list recent revisions
-[gcp-debug] cr-describe   full service description
-[gcp-debug] cr-env        show environment variables
-[gcp-debug] cr-resources  show CPU/memory/concurrency
-[gcp-debug] cr-traffic    show traffic splitting
-[gcp-debug] cr-url        get service URL
-[gcp-debug] cr-logs       view recent logs (1h)
-[gcp-debug] cr-errors     view error logs (24h)
-[gcp-debug] cr-info       full summary (image, URL, resources)
-[gcp-debug] ar-tags       list Artifact Registry image tags
-[gcp-debug] ar-images     list images in AR repo
-[gcp-debug] gcp-logs      quick log search
-[gcp-debug] gcp-debug-help  show all GCP debug commands
+[gcp] cr-find       search Cloud Run service by name/UUID
+[gcp] cr-list       list Cloud Run services
+[gcp] cr-image      get Docker image + SHA for a service
+[gcp] cr-sha        get just the image SHA digest
+[gcp] cr-revisions  list recent revisions
+[gcp] cr-describe   full service description
+[gcp] cr-env        show environment variables
+[gcp] cr-resources  show CPU/memory/concurrency
+[gcp] cr-traffic    show traffic splitting
+[gcp] cr-url        get service URL
+[gcp] cr-logs       view recent logs (1h)
+[gcp] cr-errors     view error logs (24h)
+[gcp] cr-info       full summary (image, URL, resources)
+[gcp] ar-tags       list Artifact Registry image tags
+[gcp] ar-images     list images in AR repo
+[gcp] gcp-logs      quick log search
+[gcp] gcp-debug-help  show all GCP debug commands
 [nav]       .. / ... / ....  cd up 1/2/3 levels
 [nav]       z <dir>       smart jump (zoxide)
 [nav]       zi            interactive dir picker (zoxide+fzf)
@@ -136,8 +135,6 @@ _zhelp_data() {
 [fzf]       Ctrl+R        fuzzy history search
 [fzf]       Ctrl+T        fuzzy file finder
 [fzf]       Alt+C         fuzzy cd into subdir
-[config]    zsh_mode      show current mode
-[config]    zsh_switch    switch work/personal mode
 [config]    zsh_welcome   show welcome message
 HELP
 }
@@ -173,28 +170,11 @@ zsh_welcome() {
     greeting="Good evening"
   fi
 
-  local mode_icon
-  local mode_color
-  local mode_message
-
-  if [[ "$ZSH_CONFIG_MODE" == "work" ]]; then
-    mode_icon="🏢"
-    mode_color="%F{blue}"
-    mode_message="Time to get things done!"
-  else
-    mode_icon="🏠"
-    mode_color="%F{green}"
-    mode_message="Happy coding!"
-  fi
-
   echo ""
   echo "╔════════════════════════════════════════════════════════════════╗"
   print -P "║     ${greeting}, %F{cyan}${user_name}%f! Welcome back 👋                       ║"
   echo "╚════════════════════════════════════════════════════════════════╝"
   echo ""
-
-  # Show current mode
-  print -P "${mode_icon} Mode: ${mode_color}${ZSH_CONFIG_MODE}%f - ${mode_message}"
 
   # Show Node.js version if available
   if command -v node >/dev/null 2>&1; then
@@ -217,7 +197,6 @@ zsh_welcome() {
 
   echo ""
   print -P "%F{240}💡 Type 'zhelp' to see available commands%f"
-  print -P "%F{240}⚙️  Type 'zsh_switch' to change modes%f"
   echo ""
 }
 

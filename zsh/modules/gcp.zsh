@@ -251,30 +251,25 @@ cr-info() {
   service="$_CR_SERVICE"
   region="$_CR_REGION"
 
-  local desc
-  desc=$(gcloud run services describe "$service" --region="$region" \
-    --format="json" 2>/dev/null)
-
-  if [[ -z "$desc" ]]; then
-    echo "Failed to describe service: $service"
-    return 1
-  fi
-
   local image url cpu memory
-  image=$(echo "$desc" | python3 -c "import sys,json; d=json.load(sys.stdin); print(d['spec']['template']['spec']['containers'][0]['image'])" 2>/dev/null)
-  url=$(echo "$desc" | python3 -c "import sys,json; d=json.load(sys.stdin); print(d['status'].get('url','N/A'))" 2>/dev/null)
-  cpu=$(echo "$desc" | python3 -c "import sys,json; d=json.load(sys.stdin); print(d['spec']['template']['spec']['containers'][0].get('resources',{}).get('limits',{}).get('cpu','N/A'))" 2>/dev/null)
-  memory=$(echo "$desc" | python3 -c "import sys,json; d=json.load(sys.stdin); print(d['spec']['template']['spec']['containers'][0].get('resources',{}).get('limits',{}).get('memory','N/A'))" 2>/dev/null)
+  image=$(gcloud run services describe "$service" --region="$region" \
+    --format="value(spec.template.spec.containers[0].image)" 2>/dev/null)
+  url=$(gcloud run services describe "$service" --region="$region" \
+    --format="value(status.url)" 2>/dev/null)
+  cpu=$(gcloud run services describe "$service" --region="$region" \
+    --format="value(spec.template.spec.containers[0].resources.limits.cpu)" 2>/dev/null)
+  memory=$(gcloud run services describe "$service" --region="$region" \
+    --format="value(spec.template.spec.containers[0].resources.limits.memory)" 2>/dev/null)
 
   echo "============================================"
   echo " Cloud Run Service Summary"
   echo "============================================"
   echo " Service:  $service"
   echo " Region:   $region"
-  echo " URL:      $url"
-  echo " Image:    $image"
-  echo " CPU:      $cpu"
-  echo " Memory:   $memory"
+  echo " URL:      ${url:-N/A}"
+  echo " Image:    ${image:-N/A}"
+  echo " CPU:      ${cpu:-N/A}"
+  echo " Memory:   ${memory:-N/A}"
   echo "============================================"
 }
 
