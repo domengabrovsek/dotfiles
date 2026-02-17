@@ -2,17 +2,17 @@
 
 ## Project Overview
 
-Modular zsh configuration with work/personal mode switching. Symlink-based: `~/.zsh` -> this repo, `~/.zshrc` -> `~/.zsh/.zshrc`.
+Modular zsh configuration. Symlink-based: `~/.zsh` -> this repo, `~/.zshrc` -> `~/.zsh/.zshrc`.
 
 ## Structure
 
-- `.zshrc` - Main entry point. Loads Oh My Zsh, then sources shared/*.zsh, then mode-specific (work/ or personal/) files. Ends with `~/.zshrc.local` overrides.
-- `shared/environment.zsh` - Env vars, history config, zoxide init, fzf setup, autosuggestion config, key bindings.
-- `shared/aliases.zsh` - All aliases (git, docker, k8s, npm, terraform, aws, gcp, navigation, VS Code). Uses conditional eza/bat if installed, falls back to standard tools.
-- `shared/functions.zsh` - Help system (`_zhelp_data` heredoc + `zhelp` function), welcome message, utility functions (git, docker, k8s, aws, fzf-powered, file ops, networking).
-- `shared/completions.zsh` - Cached completions for kubectl/helm (written to `cache/` dir), lazy npm completion, Docker/AWS/GCP/Terraform completions.
-- `shared/prompt.zsh` - Custom prompt with cached node version (updated on `chpwd`), AWS profile display, git info.
-- `work/` and `personal/` - Override directories for mode-specific aliases, env vars, and functions.
+- `.zshrc` - Main entry point. Loads Oh My Zsh, then sources all `modules/*.zsh` files via a loop. Ends with `~/.zshrc.local` overrides.
+- `modules/environment.zsh` - Env vars, history config, zoxide init, fzf setup, autosuggestion config, key bindings.
+- `modules/aliases.zsh` - All aliases (git, docker, k8s, npm, terraform, aws, gcp, navigation, VS Code). Uses conditional eza/bat if installed, falls back to standard tools.
+- `modules/functions.zsh` - Help system (`_zhelp_data` heredoc + `zhelp` function), welcome message, utility functions (git, docker, k8s, aws, fzf-powered, file ops, networking).
+- `modules/completions.zsh` - Cached completions for kubectl/helm (written to `cache/` dir), lazy npm completion, Docker/AWS/GCP/Terraform completions.
+- `modules/prompt.zsh` - Custom prompt with cached node version (updated on `chpwd`), AWS profile display, git info.
+- `modules/gcp.zsh` - GCP Cloud Run debugging shortcuts (cr-find, cr-image, cr-logs, etc.), Artifact Registry helpers, gcp-debug-help.
 - `install.sh` - Idempotent setup script. Installs Homebrew, Oh My Zsh, zsh plugins, CLI tools (fzf, eza, bat, zoxide), creates symlinks.
 
 ## Key Design Decisions
@@ -26,9 +26,10 @@ Modular zsh configuration with work/personal mode switching. Symlink-based: `~/.
 
 ## Common Tasks
 
-- **Add an alias**: Edit `shared/aliases.zsh` (or `work/aliases.zsh`/`personal/aliases.zsh` for mode-specific). Update `_zhelp_data` in `shared/functions.zsh` to include it in help.
-- **Add a function**: Edit `shared/functions.zsh`. Update `_zhelp_data` heredoc.
-- **Add a completion**: Edit `shared/completions.zsh`. Use caching pattern for slow completions.
+- **Add an alias**: Edit `modules/aliases.zsh`. Update `_zhelp_data` in `modules/functions.zsh` to include it in help.
+- **Add a function**: Edit `modules/functions.zsh`. Update `_zhelp_data` heredoc.
+- **Add a completion**: Edit `modules/completions.zsh`. Use caching pattern for slow completions.
+- **Add a new module**: Create `modules/<name>.zsh` and add the module name to the loading loop in `.zshrc`.
 - **Test changes**: `exec zsh` to reload. Check startup time printed on load.
 
 ## Things to Watch Out For
