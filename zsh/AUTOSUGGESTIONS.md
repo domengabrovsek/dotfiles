@@ -63,7 +63,7 @@ Commands are colored in real-time:
 
 ## ⚙️ Configuration
 
-All autosuggestion settings are in: `~/.zsh/shared/environment.zsh`
+All autosuggestion settings are in: `~/.zsh/modules/environment.zsh`
 
 ### Current Settings
 

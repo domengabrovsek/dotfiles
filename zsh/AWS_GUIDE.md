@@ -93,7 +93,7 @@ The AWS profile appears in your prompt in orange color (color 208). You can cust
 
 **Change the color:**
 
-Edit `~/.zsh/shared/prompt.zsh` and modify the `aws_profile()` function:
+Edit `~/.zsh/modules/prompt.zsh` and modify the `aws_profile()` function:
 
 ```bash
 function aws_profile() {
@@ -122,15 +122,6 @@ Replace `☁︎` with your preferred icon:
 
 ## 🔧 Advanced Tips
 
-### Set Default Profile in Work Mode
-
-Add to `~/.zsh/work/environment.zsh`:
-```bash
-export AWS_PROFILE=my-work-profile
-```
-
-Now when you switch to work mode, this profile is automatically set!
-
 ### Set Default Profile for Shell Sessions
 
 Add to `~/.zshrc.local`:
@@ -140,7 +131,7 @@ export AWS_PROFILE=my-default-profile
 
 ### Create Profile-Specific Aliases
 
-Add to `~/.zsh/work/aliases.zsh`:
+Add to `~/.zsh/modules/aliases.zsh` or `~/.zshrc.local`:
 ```bash
 alias aws-work='aws_switch my-work-profile'
 alias aws-staging='aws_switch my-staging-profile'
