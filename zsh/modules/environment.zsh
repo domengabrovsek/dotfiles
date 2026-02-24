@@ -113,7 +113,33 @@ setopt NOMATCH
 
 export NVM_DIR="$HOME/.nvm"
 # NVM loading and .nvmrc auto-switching handled by Oh My Zsh nvm plugin
-# with lazy loading (see .zshrc zstyle configuration)
+# with lazy loading (see .zshrc zstyle configuration).
+# Eagerly add Node.js bin to PATH so child processes (e.g. MCP servers
+# in Claude Code) can find node/npm/npx without triggering lazy loading.
+# Checks .nvmrc first (matching nvm autoload behavior), falls back to default alias.
+if [[ -d "$NVM_DIR" ]]; then
+  _nvm_node_bin=""
+
+  # Try .nvmrc in current directory first
+  if [[ -f ".nvmrc" ]]; then
+    _nvm_target=$(<.nvmrc)
+    _nvm_target="${_nvm_target#v}"
+    _nvm_node_bin=$(ls -d "$NVM_DIR/versions/node"/v${_nvm_target}*/bin 2>/dev/null | sort -V | tail -1)
+    unset _nvm_target
+  fi
+
+  # Fall back to default alias
+  if [[ -z "$_nvm_node_bin" ]]; then
+    _nvm_default=$(cat "$NVM_DIR/alias/default" 2>/dev/null)
+    if [[ -n "$_nvm_default" ]]; then
+      _nvm_node_bin=$(ls -d "$NVM_DIR/versions/node"/v${_nvm_default}*/bin 2>/dev/null | sort -V | tail -1)
+    fi
+    unset _nvm_default
+  fi
+
+  [[ -n "$_nvm_node_bin" ]] && export PATH="$_nvm_node_bin:$PATH"
+  unset _nvm_node_bin
+fi
 
 # ============================================================================
 # Docker Configuration

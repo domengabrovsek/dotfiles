@@ -11,14 +11,14 @@ Modular zsh configuration. Symlink-based: `~/.zsh` -> this repo, `~/.zshrc` -> `
 - `modules/aliases.zsh` - All aliases (git, docker, k8s, npm, terraform, aws, gcp, navigation, VS Code). Uses conditional eza/bat if installed, falls back to standard tools.
 - `modules/functions.zsh` - Help system (`_zhelp_data` heredoc + `zhelp` function), welcome message, utility functions (git, docker, k8s, aws, fzf-powered, file ops, networking).
 - `modules/completions.zsh` - Cached completions for kubectl/helm (written to `cache/` dir), lazy npm completion, Docker/AWS/GCP/Terraform completions.
-- `modules/prompt.zsh` - Custom prompt with cached node version (updated on `chpwd`), AWS profile display, git info.
+- `modules/prompt.zsh` - Custom prompt with cached node version (updated on PATH change via `precmd`), AWS profile display, git info.
 - `modules/gcp.zsh` - GCP Cloud Run debugging shortcuts (cr-find, cr-image, cr-logs, etc.), Artifact Registry helpers, gcp-debug-help.
 - `install.sh` - Idempotent setup script. Installs Homebrew, Oh My Zsh, zsh plugins, CLI tools (fzf, eza, bat, zoxide), creates symlinks.
 
 ## Key Design Decisions
 
 - **NVM lazy loading**: Configured via `zstyle ':omz:plugins:nvm' lazy yes` before plugins array. NVM loads on first `node`/`npm`/`nvm` call, not at shell start.
-- **Node version caching**: `prompt.zsh` caches `node -v` result, updates only on directory change (`chpwd` hook) to avoid subprocess per prompt render.
+- **Node version caching**: `prompt.zsh` caches the node version, updates on PATH change via `precmd` hook (catches `nvm use`, `nvm install`, `.nvmrc` auto-switch). Extracts version from NVM path string without subprocess. Cost: one PATH string comparison per prompt.
 - **Completion caching**: kubectl/helm completions written to `cache/*.zsh` files, regenerated only when the binary is newer than the cache file (`-nt` test).
 - **Performance timing**: Uses `zmodload zsh/datetime` + `$EPOCHREALTIME` (not `date +%s%N` which doesn't work on macOS).
 - **Symlink-based**: `install.sh` creates symlinks, not copies. This means edits to `~/.zsh/` files directly modify the repo.
