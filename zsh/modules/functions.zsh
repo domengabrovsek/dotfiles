@@ -171,9 +171,18 @@ zsh_welcome() {
   fi
 
   echo ""
-  echo "╔════════════════════════════════════════════════════════════════╗"
-  print -P "║     ${greeting}, %F{cyan}${user_name}%f! Welcome back 👋                       ║"
-  echo "╚════════════════════════════════════════════════════════════════╝"
+  local box_width=62
+  local text="${greeting}, ${user_name}! Welcome back"
+  # Display width: text chars + space before emoji (1) + emoji display width (2)
+  local display_width=$((${#text} + 3))
+  local pad_left=5
+  local pad_right=$((box_width - pad_left - display_width))
+
+  printf '╔'; printf '═%.0s' {1..$box_width}; printf '╗\n'
+  printf '║%*s' $pad_left ''
+  print -Pn "${greeting}, %F{cyan}${user_name}%f! Welcome back 👋"
+  printf '%*s║\n' $pad_right ''
+  printf '╚'; printf '═%.0s' {1..$box_width}; printf '╝\n'
   echo ""
 
   # Show Node.js version if available

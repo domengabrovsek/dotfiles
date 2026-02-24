@@ -8,10 +8,24 @@
 # ============================================================================
 
 _cached_node_version=""
+_cached_node_bin_path=""
+_prompt_last_path=""
 
 _update_node_version_cache() {
-  if command -v node >/dev/null 2>&1; then
-    _cached_node_version="$(node -v)"
+  local node_bin
+  # whence -p bypasses shell functions (e.g. nvm lazy wrappers) and finds the binary in PATH
+  node_bin="$(whence -p node 2>/dev/null)"
+
+  # Skip if the resolved binary path hasn't changed
+  [[ "$node_bin" == "$_cached_node_bin_path" ]] && return
+  _cached_node_bin_path="$node_bin"
+
+  if [[ "$node_bin" == *"/.nvm/versions/node/"* ]]; then
+    # Extract version from NVM path without subprocess
+    # e.g., /Users/x/.nvm/versions/node/v24.0.0/bin/node -> v24.0.0
+    _cached_node_version="${${node_bin%/bin/node}##*/}"
+  elif [[ -n "$node_bin" ]]; then
+    _cached_node_version="$("$node_bin" -v 2>/dev/null)"
   else
     _cached_node_version=""
   fi
@@ -23,10 +37,22 @@ function node_version() {
   fi
 }
 
-# Update cache on directory change (handles .nvmrc switches)
+# Check for node version changes before each prompt render.
+# nvm use/install changes PATH, so a PATH comparison catches all switches.
+# Cost: one string comparison per prompt; only calls _update_node_version_cache when PATH changed.
+_check_node_version() {
+  if [[ "$PATH" != "$_prompt_last_path" ]]; then
+    _prompt_last_path="$PATH"
+    _update_node_version_cache
+  fi
+}
+
 autoload -U add-zsh-hook
-add-zsh-hook chpwd _update_node_version_cache
+add-zsh-hook precmd _check_node_version
+
+# Initial cache population
 _update_node_version_cache
+_prompt_last_path="$PATH"
 
 # ============================================================================
 # AWS Profile Display
