@@ -154,6 +154,7 @@ alias ndev='npm run dev'
 alias aws-whoami='aws sts get-caller-identity'
 alias aws-regions='aws ec2 describe-regions --output table'
 alias aws-profile='export AWS_PROFILE='
+alias aws-login='aws sso login --profile $AWS_PROFILE'
 alias awsp='aws_switch'  # Quick profile switcher
 alias awsc='aws_current'  # Show current profile
 
@@ -165,6 +166,7 @@ alias gcp-whoami='gcloud config get-value account'
 alias gcp-project='gcloud config get-value project'
 alias gcp-projects='gcloud projects list'
 alias gcp-set-project='gcloud config set project'
+alias gcp-login='gcloud auth application-default login'
 alias gcpp='gcp_switch'   # Quick profile switcher (like awsp)
 alias gcpc='gcp_current'  # Show current profile (like awsc)
 
