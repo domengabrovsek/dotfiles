@@ -37,7 +37,12 @@ export ZSH="$HOME/.oh-my-zsh"
 ZSH_THEME=""
 
 # Oh My Zsh NVM lazy loading (must be set before plugins are loaded)
-zstyle ':omz:plugins:nvm' lazy yes
+# Only enable lazy loading for interactive shells. Non-interactive shells
+# (Claude Code Bash tool, CI scripts, `zsh -c`) eagerly source nvm to avoid
+# the lazy wrapper's `_omz_nvm_setup_completion: command not found` noise
+# polluting tool output. Eager load adds ~100-300ms which is invisible in
+# non-interactive contexts but would be felt at every terminal open.
+[[ -o interactive ]] && zstyle ':omz:plugins:nvm' lazy yes
 zstyle ':omz:plugins:nvm' autoload yes
 zstyle ':omz:plugins:nvm' silent-autoload yes
 
