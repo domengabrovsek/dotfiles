@@ -85,8 +85,11 @@ fi
 # Performance Monitoring
 # ============================================================================
 
-# Show shell startup time
-printf "Shell loaded in: %.0fms\n" $(( ($EPOCHREALTIME - shell_start_time) * 1000 ))
+# Show shell startup time (interactive only - non-interactive shells are
+# invoked by tools and CI where the timer line is just stdout noise).
+if [[ -o interactive ]]; then
+  printf "Shell loaded in: %.0fms\n" $(( ($EPOCHREALTIME - shell_start_time) * 1000 ))
+fi
 
 # ============================================================================
 # Welcome Message
