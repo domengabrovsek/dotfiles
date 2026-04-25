@@ -103,6 +103,13 @@ fi
 ln -sf "$HOME/.zsh/.zshrc" "$HOME/.zshrc"
 echo "[ok] ~/.zshrc -> ~/.zsh/.zshrc"
 
+# Back up and replace ~/.zshenv (non-interactive shells read this)
+if [ -f "$HOME/.zshenv" ] && [ ! -L "$HOME/.zshenv" ]; then
+  mv "$HOME/.zshenv" "$HOME/.zshenv.backup-$(date +%Y%m%d-%H%M%S)"
+fi
+ln -sf "$HOME/.zsh/.zshenv" "$HOME/.zshenv"
+echo "[ok] ~/.zshenv -> ~/.zsh/.zshenv"
+
 # Ensure cache dir exists
 mkdir -p "$SCRIPT_DIR/cache"
 
