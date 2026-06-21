@@ -827,3 +827,33 @@ kill_port() {
   fi
   lsof -ti:"$1" | xargs kill -9
 }
+
+# ============================================================================
+# Auto nvm use on directory change (.nvmrc)
+# ============================================================================
+# Picks up the Node version from `.nvmrc` whenever you `cd` into a directory.
+# Only runs in interactive shells - non-interactive shells already get the
+# right version via .zshenv's nvm-default PATH prepend.
+if [[ -o interactive ]]; then
+  autoload -U add-zsh-hook
+  load-nvmrc() {
+    if ! command -v nvm >/dev/null 2>&1; then
+      return
+    fi
+    local nvmrc_path
+    nvmrc_path="$(nvm_find_nvmrc 2>/dev/null)"
+    if [[ -n "$nvmrc_path" ]]; then
+      local nvmrc_node_version
+      nvmrc_node_version="$(nvm version "$(cat "$nvmrc_path")" 2>/dev/null)"
+      if [[ "$nvmrc_node_version" == "N/A" ]]; then
+        nvm install
+      elif [[ "$nvmrc_node_version" != "$(nvm version)" ]]; then
+        nvm use --silent
+      fi
+    elif [[ -n "$(PWD=$OLDPWD nvm_find_nvmrc 2>/dev/null)" && "$(nvm version)" != "$(nvm version default)" ]]; then
+      nvm use default --silent
+    fi
+  }
+  add-zsh-hook chpwd load-nvmrc
+  load-nvmrc
+fi
