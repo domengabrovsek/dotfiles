@@ -1,0 +1,12 @@
+# Ghostty configuration. Version-controlled in the dotfiles repo and symlinked
+# to ~/.config/ghostty/config by install.sh.
+#
+# Run `ghostty +show-config --default --docs` to see every option and default.
+
+# Launch straight into the persistent "pentla" tmux session, which defines the
+# tabs/panes/folders. The session script create-or-attaches, so it survives app
+# restarts. To open a plain shell instead, comment this out (or bind a key).
+command = /Users/domengabrovsek/.config/tmux/sessions/pentla.sh
+
+# Closing the last surface quits Ghostty rather than leaving an empty window.
+quit-after-last-window-closed = true
