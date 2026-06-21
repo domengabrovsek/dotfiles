@@ -100,3 +100,4 @@ if [[ -z "$ZSH_DISABLE_WELCOME" ]]; then
     zsh_welcome
   fi
 fi
+export PATH="/opt/homebrew/opt/libpq/bin:$PATH"
