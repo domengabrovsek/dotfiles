@@ -1,0 +1,22 @@
+# Managed by dotfiles/git. Symlinked to ~/.gitconfig.
+# Personal is the default identity; work contexts override per-directory below.
+
+[user]
+	name = Domen Gabrovsek
+	email = domen@domengabrovsek.com
+
+[core]
+	editor = code --wait
+
+# Pentla (work): identity switches to the work email inside this folder.
+# Trailing slash matters - it means "this dir and everything under it".
+[includeIf "gitdir:~/dev/work/pentla/"]
+	path = ~/.gitconfig-pentla
+
+# Route the whole Pentla-tech GitHub org through the pentla SSH key via the
+# github-pentla host alias, no matter where the repo lives on disk. This makes
+# `git clone git@github.com:Pentla-tech/...` pick the right key automatically,
+# even though identity above is keyed off the directory.
+[url "git@github-pentla:Pentla-tech/"]
+	insteadOf = git@github.com:Pentla-tech/
+	insteadOf = https://github.com/Pentla-tech/
