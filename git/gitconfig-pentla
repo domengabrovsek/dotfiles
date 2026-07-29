@@ -1,0 +1,6 @@
+# Managed by dotfiles/git. Symlinked to ~/.gitconfig-pentla.
+# Included only for repos under ~/dev/work/pentla/ (see includeIf in gitconfig).
+
+[user]
+	name = Domen Gabrovsek
+	email = domen@pentla.tech
