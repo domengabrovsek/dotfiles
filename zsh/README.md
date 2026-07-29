@@ -42,7 +42,7 @@ cd dotfiles/zsh
 ./install.sh
 ```
 
-The install script handles everything: Homebrew, Oh My Zsh, plugins, CLI tools (fzf, eza, bat, zoxide), and symlinks. It's idempotent and safe to re-run.
+The install script handles everything: Homebrew, Oh My Zsh, plugins, CLI tools (fzf, eza, bat, zoxide), nvm + Node LTS, and symlinks. It's idempotent and safe to re-run.
 
 After install, open a new terminal or run `exec zsh`.
 
@@ -55,7 +55,7 @@ The entire config lives in the git repo. The installer creates two symlinks:
 ~/.zshrc   ->  ~/.zsh/.zshrc             (the main entry point)
 ```
 
-This means any edit you make in `~/.zsh/` directly modifies the repo — you can `git diff` to see changes, commit them, and `git pull` on another machine to sync. No copying files around, no manual syncing. Clone the repo on a new machine, run `install.sh`, and you have the exact same shell setup.
+This means any edit you make in `~/.zsh/` directly modifies the repo - you can `git diff` to see changes, commit them, and `git pull` on another machine to sync. No copying files around, no manual syncing. Clone the repo on a new machine, run `install.sh`, and you have the exact same shell setup.
 
 ## Directory Structure
 

@@ -15,8 +15,9 @@ The install script is idempotent (safe to re-run) and handles:
 2. **Oh My Zsh** - installs if missing
 3. **Zsh plugins** - zsh-autosuggestions, zsh-syntax-highlighting
 4. **CLI tools** via Homebrew - fzf, eza, bat, zoxide
-5. **Symlinks** - `~/.zsh` -> repo, `~/.zshrc` -> `~/.zsh/.zshrc`
-6. **Cache directory** - for kubectl/helm completion caching
+5. **nvm + Node** - classic `~/.nvm` install, then Node LTS set as default
+6. **Symlinks** - `~/.zsh` -> repo, `~/.zshrc` -> `~/.zsh/.zshrc`
+7. **Cache directory** - for kubectl/helm completion caching
 
 Open a new terminal or run `exec zsh` when done.
 

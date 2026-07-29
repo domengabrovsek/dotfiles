@@ -74,7 +74,40 @@ if [ ${#missing[@]} -gt 0 ]; then
 fi
 
 # ============================================================================
-# 5. Symlink config
+# 5. nvm + Node
+# ============================================================================
+
+# The whole config (.zshenv, environment.zsh, prompt.zsh, OMZ nvm plugin) assumes
+# the classic ~/.nvm layout, so install nvm there rather than via Homebrew (whose
+# nvm.sh lives outside NVM_DIR and is skipped once NVM_DIR is pinned).
+NVM_VERSION="v0.40.6"
+export NVM_DIR="$HOME/.nvm"
+
+if [ ! -s "$NVM_DIR/nvm.sh" ]; then
+  echo "Installing nvm $NVM_VERSION..."
+  # PROFILE=/dev/null stops nvm's installer from editing the symlinked .zshrc/.zshenv
+  curl -fsSL "https://raw.githubusercontent.com/nvm-sh/nvm/$NVM_VERSION/install.sh" | PROFILE=/dev/null bash
+else
+  echo "[ok] nvm"
+fi
+
+# shellcheck source=/dev/null
+. "$NVM_DIR/nvm.sh"
+
+if [ ! -s "$NVM_DIR/alias/default" ]; then
+  echo "Installing Node LTS and setting it as default..."
+  nvm install --lts
+  # Pin the default to the major version (e.g. "24"), the form .zshenv resolves
+  # against ~/.nvm/versions/node. An "lts/*" glob default is not resolvable there.
+  node_major="$(nvm current)"; node_major="${node_major#v}"; node_major="${node_major%%.*}"
+  nvm alias default "$node_major"
+  unset node_major
+else
+  echo "[ok] Node ($(nvm version default))"
+fi
+
+# ============================================================================
+# 6. Symlink config
 # ============================================================================
 
 # Back up and replace ~/.zsh if it's not already pointing to the repo
