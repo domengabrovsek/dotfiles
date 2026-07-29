@@ -6,15 +6,22 @@ key. Structure extends to more clients by copying the pentla pieces.
 
 ## Setup (new machine) - full copy-paste flow
 
-A fresh machine has no SSH key yet. Because this repo is **public**, the
-bootstrap clone uses HTTPS (no credentials), and `install.sh` creates the keys.
-Run these top to bottom:
+This repo is **private** and a fresh machine has no SSH key yet, so bootstrap
+with the GitHub CLI (browser login, no key required), then let `install.sh`
+create the per-context keys. Run these top to bottom:
 
 ```bash
-# 1. Bootstrap over HTTPS - no SSH key needed for a public repo
-git clone https://github.com/domengabrovsek/dotfiles.git ~/dev/personal/dotfiles
+# 1. Homebrew (also triggers the Xcode command line tools / git install)
+/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
 
-# 2. Generate keys + wire up git and ssh config (idempotent, safe to re-run)
+# 2. GitHub CLI + browser login: choose GitHub.com -> HTTPS -> login with a browser
+brew install gh
+gh auth login
+
+# 3. Clone this private repo over the gh-authenticated HTTPS connection
+gh repo clone domengabrovsek/dotfiles ~/dev/personal/dotfiles
+
+# 4. Generate keys + wire up git and ssh config (idempotent, safe to re-run)
 cd ~/dev/personal/dotfiles/git && ./install.sh
 ```
 
@@ -23,14 +30,14 @@ The script prints two **public** keys. Add each to GitHub at
 your Pentla-tech org member), then:
 
 ```bash
-# 3. Verify SSH auth for both identities
+# 5. Verify SSH auth for both identities
 ssh -T git@github.com        # expect: Hi domengabrovsek
 ssh -T git@github-pentla     # expect: Hi <pentla user>
 
-# 4. Switch this dotfiles repo to SSH so future pulls use id_personal
+# 6. Switch this dotfiles repo to SSH so future pulls use id_personal
 git -C ~/dev/personal/dotfiles remote set-url origin git@github.com:domengabrovsek/dotfiles.git
 
-# 5. Clone the rest into the folder that matches each identity
+# 7. Clone the rest into the folder that matches each identity
 git clone git@github.com:domengabrovsek/personal-api.git ~/dev/personal/personal-api
 git clone git@github.com:Pentla-tech/pentla-api.git      ~/dev/work/pentla/pentla-api
 ```
