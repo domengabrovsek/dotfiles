@@ -74,6 +74,36 @@ git clone git@github.com:Pentla-tech/<repo>.git    ~/dev/work/pentla/<repo>
 
 Confirm the active identity in any repo with `git config user.email`.
 
+## Homelab Raspberry Pis
+
+`ssh.config` also defines aliases for the homelab Pis, so `ssh pi5` / `ssh pi4`
+work on a new machine the moment the config is Included. Each Pi has two
+aliases:
+
+| Alias | Host | Use |
+|---|---|---|
+| `pi5` / `pi4` | LAN IP (`192.168.0.x`) | on the home network |
+| `pi5-remote` / `pi4-remote` | Tailscale IP (`100.x`) | off the home network |
+
+They share one key, `~/.ssh/id_rpi5_macbook_air`, which is **not** in this repo
+(it is a private key). On a new machine, either:
+
+- **Copy the existing key** from another machine (simplest):
+  ```bash
+  # run on the machine that already has the key
+  scp ~/.ssh/id_rpi5_macbook_air new-machine:~/.ssh/
+  ```
+  then re-run `./install.sh` (or `chmod 600 ~/.ssh/id_rpi5_macbook_air &&
+  ssh-add --apple-use-keychain ~/.ssh/id_rpi5_macbook_air`).
+
+- **Issue a per-machine key** (cleaner, touches the Pis):
+  ```bash
+  ssh-keygen -t ed25519 -C "id_rpi5_<new-machine>" -f ~/.ssh/id_rpi5_macbook_air
+  ssh-copy-id -i ~/.ssh/id_rpi5_macbook_air.pub pi   # from a machine that can already reach the Pi
+  ```
+
+Verify with `ssh pi5` (LAN) or `ssh pi5-remote` (via Tailscale).
+
 ## Adding another client
 
 1. `ssh-keygen -t ed25519 -C "<client email>" -f ~/.ssh/id_<client>`
