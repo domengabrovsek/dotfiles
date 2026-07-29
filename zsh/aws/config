@@ -1,0 +1,15 @@
+# AWS config managed in dotfiles. No secrets here - only the SSO session and
+# account/role mapping. Credentials are short-lived and fetched on demand via
+# `aws sso login --sso-session personal` (see AWS_GUIDE.md).
+
+[sso-session personal]
+sso_start_url = https://d-996763f6eb.awsapps.com/start
+sso_region = eu-central-1
+sso_registration_scopes = sso:account:access
+
+[profile personal]
+sso_session = personal
+sso_account_id = 359330567557
+sso_role_name = AdministratorAccess
+region = eu-central-1
+output = json

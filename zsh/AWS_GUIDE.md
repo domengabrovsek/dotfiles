@@ -20,6 +20,18 @@ Automatically verifies credentials when switching profiles.
 
 ## 🚀 Quick Start
 
+### First-time setup (SSO)
+
+`install.sh` symlinks `~/.aws/config` to the dotfiles-managed `zsh/aws/config`, which
+holds the `personal` SSO session and profile (no secrets). Authenticate once per session:
+
+```bash
+aws sso login --sso-session personal
+```
+
+Credentials are short-lived and refreshed by re-running that command. To add or change
+accounts, edit `zsh/aws/config` and commit - it syncs to every machine on next `install.sh`.
+
 ### Switch Profiles Interactively
 
 ```bash

@@ -16,8 +16,9 @@ The install script is idempotent (safe to re-run) and handles:
 3. **Zsh plugins** - zsh-autosuggestions, zsh-syntax-highlighting
 4. **CLI tools** via Homebrew - fzf, eza, bat, zoxide
 5. **nvm + Node** - classic `~/.nvm` install, then Node LTS set as default
-6. **Symlinks** - `~/.zsh` -> repo, `~/.zshrc` -> `~/.zsh/.zshrc`
-7. **Cache directory** - for kubectl/helm completion caching
+6. **Cloud CLIs + accounts** - awscli, google-cloud-sdk, session-manager-plugin; seeds the AWS SSO config and gcloud configurations (no secrets)
+7. **Symlinks** - `~/.zsh` -> repo, `~/.zshrc` -> `~/.zsh/.zshrc`
+8. **Cache directory** - for kubectl/helm completion caching
 
 Open a new terminal or run `exec zsh` when done.
 

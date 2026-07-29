@@ -42,7 +42,7 @@ cd dotfiles/zsh
 ./install.sh
 ```
 
-The install script handles everything: Homebrew, Oh My Zsh, plugins, CLI tools (fzf, eza, bat, zoxide), nvm + Node LTS, and symlinks. It's idempotent and safe to re-run.
+The install script handles everything: Homebrew, Oh My Zsh, plugins, CLI tools (fzf, eza, bat, zoxide), nvm + Node LTS, the cloud CLIs (aws, gcloud) with your AWS SSO and gcloud accounts seeded, and symlinks. It's idempotent and safe to re-run.
 
 After install, open a new terminal or run `exec zsh`.
 
