@@ -85,24 +85,61 @@ aliases:
 | `pi5` / `pi4` | LAN IP (`192.168.0.x`) | on the home network |
 | `pi5-remote` / `pi4-remote` | Tailscale IP (`100.x`) | off the home network |
 
-They share one key, `~/.ssh/id_rpi5_macbook_air`, which is **not** in this repo
-(it is a private key). On a new machine, either:
+The aliases share one key, `~/.ssh/id_rpi5_macbook_air`, which is **not** in
+this repo (it is a private key). Running `git/install.sh` installs the config
+but cannot install the key - that is the one manual step below.
 
-- **Copy the existing key** from another machine (simplest):
-  ```bash
-  # run on the machine that already has the key
-  scp ~/.ssh/id_rpi5_macbook_air new-machine:~/.ssh/
-  ```
-  then re-run `./install.sh` (or `chmod 600 ~/.ssh/id_rpi5_macbook_air &&
-  ssh-add --apple-use-keychain ~/.ssh/id_rpi5_macbook_air`).
+### New-machine setup (top to bottom)
 
-- **Issue a per-machine key** (cleaner, touches the Pis):
-  ```bash
-  ssh-keygen -t ed25519 -C "id_rpi5_<new-machine>" -f ~/.ssh/id_rpi5_macbook_air
-  ssh-copy-id -i ~/.ssh/id_rpi5_macbook_air.pub pi   # from a machine that can already reach the Pi
-  ```
+```bash
+# 1. Config: install.sh wires ssh.config's Include (skip if already run for git).
+cd ~/dev/personal/dotfiles/git && ./install.sh
 
-Verify with `ssh pi5` (LAN) or `ssh pi5-remote` (via Tailscale).
+# 2. Tailscale, so the `-remote` (100.x) aliases resolve off the home network.
+#    The Pis are already on the tailnet; only the new machine needs joining.
+brew install --cask tailscale && open -a Tailscale   # then log in via the menu-bar app
+#    or headless: brew install tailscale && sudo tailscale up
+```
+
+Then pick **one** key path:
+
+**A - reuse the existing key (simplest, no Pi changes).** The Pis already trust
+this key's public half, so copying the private key is all that's needed. From
+the machine that still has it:
+
+```bash
+scp ~/.ssh/id_rpi5_macbook_air <new-machine>:~/.ssh/
+```
+
+On the new machine, load it (or just re-run `./install.sh`, which now does this):
+
+```bash
+chmod 600 ~/.ssh/id_rpi5_macbook_air
+ssh-add --apple-use-keychain ~/.ssh/id_rpi5_macbook_air
+```
+
+**B - issue a per-machine key (cleaner, one step per Pi).** Generate on the new
+machine, then authorize it on each Pi from a machine that can already reach them:
+
+```bash
+ssh-keygen -t ed25519 -C "id_rpi5_<new-machine>" -f ~/.ssh/id_rpi5_macbook_air
+ssh-copy-id -i ~/.ssh/id_rpi5_macbook_air.pub pi5   # User pi
+ssh-copy-id -i ~/.ssh/id_rpi5_macbook_air.pub pi4   # User domengabrovsek
+```
+
+(If you prefer a distinct filename per machine, point the Pi `IdentityFile`
+lines in `ssh.config` at it instead of overwriting `id_rpi5_macbook_air`.)
+
+### Verify
+
+```bash
+ssh pi5           # LAN     (192.168.0.x)
+ssh pi5-remote    # Tailscale (100.x, works off-network)
+ssh pi4
+```
+
+If `pi5` works but `pi5-remote` hangs, the new machine isn't on the tailnet
+(re-check step 2). If both hang, the key isn't authorized on the Pi (key path).
 
 ## Adding another client
 
