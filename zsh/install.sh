@@ -107,7 +107,29 @@ else
 fi
 
 # ============================================================================
-# 6. Symlink config
+# 6. Cloud CLIs + accounts (AWS, GCP)
+# ============================================================================
+
+# Ensure the cloud CLIs are present. gcloud + session-manager-plugin ship as casks.
+if command -v aws &> /dev/null; then echo "[ok] awscli"; else echo "Installing awscli..."; brew install awscli; fi
+if command -v gcloud &> /dev/null; then echo "[ok] gcloud"; else echo "Installing google-cloud-sdk..."; brew install --cask google-cloud-sdk; fi
+if command -v session-manager-plugin &> /dev/null; then echo "[ok] session-manager-plugin"; else echo "Installing session-manager-plugin..."; brew install --cask session-manager-plugin; fi
+
+# Symlink the SSO config (no secrets in it) so `aws sso login --sso-session personal` works.
+mkdir -p "$HOME/.aws"
+if [ -f "$HOME/.aws/config" ] && [ ! -L "$HOME/.aws/config" ]; then
+  mv "$HOME/.aws/config" "$HOME/.aws/config.backup-$(date +%Y%m%d-%H%M%S)"
+fi
+ln -sf "$SCRIPT_DIR/aws/config" "$HOME/.aws/config"
+echo "[ok] ~/.aws/config -> $SCRIPT_DIR/aws/config"
+
+# Seed gcloud configurations (idempotent - creates each only if missing).
+if [ -x "$SCRIPT_DIR/gcp/configurations.sh" ]; then
+  "$SCRIPT_DIR/gcp/configurations.sh"
+fi
+
+# ============================================================================
+# 7. Symlink config
 # ============================================================================
 
 # Back up and replace ~/.zsh if it's not already pointing to the repo
