@@ -507,123 +507,39 @@ kns() {
 # AWS Functions
 # ============================================================================
 
-# Switch AWS profile with interactive selection
+# Switch AWS profile via fzf; auto-refreshes an expired SSO session
 aws_switch() {
-  # Get list of available profiles
-  local profiles=()
-  if [[ -f ~/.aws/config ]]; then
-    # Extract profiles from ~/.aws/config using grep and sed
-    while IFS= read -r profile_name; do
-      if [[ -n "$profile_name" ]]; then
-        profiles+=("$profile_name")
-      fi
-    done < <(grep -E '^\[profile ' ~/.aws/config | sed 's/\[profile \(.*\)\]/\1/')
+  command -v aws >/dev/null 2>&1 || { echo "❌ aws CLI required."; return 1; }
 
-    # Check for [default] section
-    if grep -q '^\[default\]' ~/.aws/config; then
-      profiles+=("default")
-    fi
+  # `awsp off` / `awsp -c` clears the active profile
+  if [[ "$1" == "off" || "$1" == "-c" ]]; then
+    unset AWS_PROFILE
+    echo "✓ Cleared AWS_PROFILE"
+    return 0
   fi
 
-  # Also check ~/.aws/credentials for additional profiles
-  if [[ -f ~/.aws/credentials ]]; then
-    while IFS= read -r profile_name; do
-      if [[ -n "$profile_name" ]]; then
-        # Add if not already in array
-        if [[ ! " ${profiles[@]} " =~ " ${profile_name} " ]]; then
-          profiles+=("$profile_name")
-        fi
-      fi
-    done < <(grep -E '^\[' ~/.aws/credentials | sed 's/\[\(.*\)\]/\1/')
-  fi
-
-  # If no argument provided, show interactive selection
-  if [[ -z "$1" ]]; then
-    if [[ ${#profiles[@]} -eq 0 ]]; then
-      echo "❌ No AWS profiles found in ~/.aws/config or ~/.aws/credentials"
-      return 1
-    fi
-
-    echo "☁️  Available AWS Profiles:"
-    echo ""
-
-    # Show current profile
-    if [[ -n "$AWS_PROFILE" ]]; then
-      echo "   Current: %F{green}$AWS_PROFILE%f (active)" | sed 's/%F{green}/\x1b[32m/g' | sed 's/%f/\x1b[0m/g'
-    else
-      echo "   Current: (none set)"
-    fi
-    echo ""
-
-    # List all profiles with numbers
-    local i=1
-    for profile in "${profiles[@]}"; do
-      if [[ "$profile" == "$AWS_PROFILE" ]]; then
-        printf "   \x1b[32m%2d) %s ✓\x1b[0m\n" $i "$profile"
-      else
-        printf "   %2d) %s\n" $i "$profile"
-      fi
-      ((i++))
-    done
-
-    echo ""
-    echo "   0) Clear profile (unset AWS_PROFILE)"
-    echo ""
-    echo -n "Select profile number (or press Enter to cancel): "
-    read selection
-
-    # Handle selection
-    if [[ -z "$selection" ]]; then
-      echo "Cancelled."
-      return 0
-    elif [[ "$selection" == "0" ]]; then
-      unset AWS_PROFILE
-      echo "✓ Cleared AWS_PROFILE"
-      return 0
-    elif [[ "$selection" =~ ^[0-9]+$ ]] && [[ $selection -ge 1 ]] && [[ $selection -le ${#profiles[@]} ]]; then
-      local selected_profile="${profiles[$selection]}"
-      export AWS_PROFILE="$selected_profile"
-      echo ""
-      echo "✓ Switched to AWS profile: $selected_profile"
-      echo ""
-
-      # Show caller identity if AWS CLI is available
-      if command -v aws &> /dev/null; then
-        echo "Verifying credentials..."
-        if aws sts get-caller-identity 2>/dev/null; then
-          echo ""
-          echo "✓ Profile verified successfully!"
-        else
-          echo "⚠️  Warning: Could not verify credentials. Check your AWS configuration."
-        fi
-      fi
-    else
-      echo "❌ Invalid selection: $selection"
-      return 1
-    fi
+  local profile
+  if [[ -n "$1" ]] && aws configure list-profiles | grep -qx "$1"; then
+    profile="$1"                                   # exact name switches directly
   else
-    # Direct profile switch (legacy behavior)
-    local profile_name="$1"
-
-    # Check if profile exists
-    if [[ ! " ${profiles[@]} " =~ " ${profile_name} " ]]; then
-      echo "❌ Profile '$profile_name' not found."
-      echo ""
-      echo "Available profiles:"
-      for profile in "${profiles[@]}"; do
-        echo "  - $profile"
-      done
-      return 1
-    fi
-
-    export AWS_PROFILE="$profile_name"
-    echo "✓ Switched to AWS profile: $profile_name"
-
-    # Show caller identity if AWS CLI is available
-    if command -v aws &> /dev/null; then
-      aws sts get-caller-identity 2>/dev/null || echo "⚠️  Could not verify credentials"
-    fi
+    command -v fzf >/dev/null 2>&1 || { echo "❌ fzf required for selection."; return 1; }
+    # `awsp <text>` pre-filters; preview shows each profile's account id + role
+    profile=$(aws configure list-profiles | sort | fzf --height 40% --reverse \
+      --query "$1" --prompt "aws profile> " \
+      --preview 'echo "account: $(aws configure get sso_account_id --profile {})"; \
+                 echo "role:    $(aws configure get sso_role_name  --profile {})"') || return
   fi
+  [[ -z "$profile" ]] && return
+
+  export AWS_PROFILE="$profile"
+  echo "☁️  AWS_PROFILE=$profile"
+
+  # Only hit the browser when the cached SSO token is missing or expired
+  if ! aws sts get-caller-identity >/dev/null 2>&1; then
+    echo "SSO session expired, logging in..."
+    aws sso login --profile "$profile"
+  fi
+  aws sts get-caller-identity --query Account --output text 2>/dev/null | sed 's/^/✓ account /'
 }
 
 # Quick alias to show current AWS profile
