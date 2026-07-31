@@ -85,7 +85,7 @@ aliases:
 | `pi5` / `pi4` | LAN IP (`192.168.0.x`) | on the home network |
 | `pi5-remote` / `pi4-remote` | Tailscale IP (`100.x`) | off the home network |
 
-The aliases share one key, `~/.ssh/id_rpi5_macbook_air`, which is **not** in
+The aliases share one key, `~/.ssh/id_rpi5`, which is **not** in
 this repo (it is a private key). Running `git/install.sh` installs the config
 but cannot install the key - that is the one manual step below.
 
@@ -94,7 +94,7 @@ but cannot install the key - that is the one manual step below.
 Each machine gets its own keypair, so a lost or retired laptop is revoked by
 deleting one line on each Pi - no shared private key travels over the network.
 The new key is saved at the path `ssh.config` already expects
-(`~/.ssh/id_rpi5_macbook_air`), so `ssh pi5` / `ssh pi4` work with zero config
+(`~/.ssh/id_rpi5`), so `ssh pi5` / `ssh pi4` work with zero config
 edits; the pubkey **comment** (not the filename) is what tells the machines
 apart in `authorized_keys`.
 
@@ -111,18 +111,18 @@ brew install --cask tailscale && open -a Tailscale   # then log in via the menu-
 
 # 3. Generate a fresh key. The -C comment identifies THIS machine (use for revoke).
 ssh-keygen -t ed25519 -C "id_rpi5_$(scutil --get ComputerName | tr ' ' '-')" \
-  -f ~/.ssh/id_rpi5_macbook_air
-ssh-add --apple-use-keychain ~/.ssh/id_rpi5_macbook_air   # or just re-run ./install.sh
+  -f ~/.ssh/id_rpi5
+ssh-add --apple-use-keychain ~/.ssh/id_rpi5   # or just re-run ./install.sh
 
 # 4. Show the PUBLIC key - authorize it on each Pi using one bridge below.
-cat ~/.ssh/id_rpi5_macbook_air.pub
+cat ~/.ssh/id_rpi5.pub
 ```
 
 The new machine can't SSH in yet, so authorize its **public** key through one
 trusted bridge:
 
 **Bridge A - the old machine still reaches the Pis.** Copy the new `.pub` to the
-old machine (`pbcopy < ~/.ssh/id_rpi5_macbook_air.pub`, then paste into a temp
+old machine (`pbcopy < ~/.ssh/id_rpi5.pub`, then paste into a temp
 file there), and from the **old machine** push it onto each Pi:
 
 ```bash
@@ -167,14 +167,14 @@ revoked per machine - prefer the per-machine key above. From the machine that
 still has it:
 
 ```bash
-scp ~/.ssh/id_rpi5_macbook_air <new-machine>:~/.ssh/
+scp ~/.ssh/id_rpi5 <new-machine>:~/.ssh/
 ```
 
 On the new machine, load it (or just re-run `./install.sh`, which now does this):
 
 ```bash
-chmod 600 ~/.ssh/id_rpi5_macbook_air
-ssh-add --apple-use-keychain ~/.ssh/id_rpi5_macbook_air
+chmod 600 ~/.ssh/id_rpi5
+ssh-add --apple-use-keychain ~/.ssh/id_rpi5
 ```
 
 ## Adding another client

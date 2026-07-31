@@ -80,7 +80,7 @@ fi
 
 # ssh.config also aliases the homelab Pis (pi5, pi4, ...). That key is not
 # generated here - it must be copied from another machine or re-issued per Pi.
-RPI_KEY="$SSH_DIR/id_rpi5_macbook_air"
+RPI_KEY="$SSH_DIR/id_rpi5"
 if [ -f "$RPI_KEY" ]; then
   chmod 600 "$RPI_KEY"
   ssh-add --apple-use-keychain "$RPI_KEY" 2>/dev/null && echo "[ok] Pi key added to agent + keychain"
