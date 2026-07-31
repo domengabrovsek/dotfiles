@@ -89,7 +89,16 @@ The aliases share one key, `~/.ssh/id_rpi5_macbook_air`, which is **not** in
 this repo (it is a private key). Running `git/install.sh` installs the config
 but cannot install the key - that is the one manual step below.
 
-### New-machine setup (top to bottom)
+### New-machine setup (recommended: per-machine key)
+
+Each machine gets its own keypair, so a lost or retired laptop is revoked by
+deleting one line on each Pi - no shared private key travels over the network.
+The new key is saved at the path `ssh.config` already expects
+(`~/.ssh/id_rpi5_macbook_air`), so `ssh pi5` / `ssh pi4` work with zero config
+edits; the pubkey **comment** (not the filename) is what tells the machines
+apart in `authorized_keys`.
+
+Run top to bottom on the **new machine**:
 
 ```bash
 # 1. Config: install.sh wires ssh.config's Include (skip if already run for git).
@@ -99,13 +108,63 @@ cd ~/dev/personal/dotfiles/git && ./install.sh
 #    The Pis are already on the tailnet; only the new machine needs joining.
 brew install --cask tailscale && open -a Tailscale   # then log in via the menu-bar app
 #    or headless: brew install tailscale && sudo tailscale up
+
+# 3. Generate a fresh key. The -C comment identifies THIS machine (use for revoke).
+ssh-keygen -t ed25519 -C "id_rpi5_$(scutil --get ComputerName | tr ' ' '-')" \
+  -f ~/.ssh/id_rpi5_macbook_air
+ssh-add --apple-use-keychain ~/.ssh/id_rpi5_macbook_air   # or just re-run ./install.sh
+
+# 4. Show the PUBLIC key - authorize it on each Pi using one bridge below.
+cat ~/.ssh/id_rpi5_macbook_air.pub
 ```
 
-Then pick **one** key path:
+The new machine can't SSH in yet, so authorize its **public** key through one
+trusted bridge:
 
-**A - reuse the existing key (simplest, no Pi changes).** The Pis already trust
-this key's public half, so copying the private key is all that's needed. From
-the machine that still has it:
+**Bridge A - the old machine still reaches the Pis.** Copy the new `.pub` to the
+old machine (`pbcopy < ~/.ssh/id_rpi5_macbook_air.pub`, then paste into a temp
+file there), and from the **old machine** push it onto each Pi:
+
+```bash
+ssh-copy-id -i /path/to/new_machine.pub pi5   # User pi
+ssh-copy-id -i /path/to/new_machine.pub pi4   # User domengabrovsek
+```
+
+**Bridge B - no old machine; run this on each Pi directly** (physical keyboard
+or an existing session). Paste the pubkey line printed in step 4:
+
+```bash
+mkdir -p ~/.ssh && chmod 700 ~/.ssh
+echo 'ssh-ed25519 AAAA...paste-the-pubkey... id_rpi5_<new-machine>' >> ~/.ssh/authorized_keys
+chmod 600 ~/.ssh/authorized_keys
+```
+
+That paste is the only thing that runs on the Pi itself - no `sshd_config`
+changes, the Pis already do key auth.
+
+### Verify (on the new machine)
+
+```bash
+ssh pi5           # LAN       (192.168.0.2, user pi)
+ssh pi4           # LAN       (192.168.0.3, user domengabrovsek)
+ssh pi5-remote    # Tailscale (100.x, works off-network)
+ssh pi4-remote
+```
+
+If LAN works but `-remote` hangs, the new machine isn't on the tailnet (re-check
+step 2). If both hang, the pubkey didn't land in the Pi's `authorized_keys`.
+
+### Retiring the old machine
+
+Revoke its key so a decommissioned laptop can't get back in - on **each Pi**,
+delete the old machine's line from `~/.ssh/authorized_keys` (find it by its `-C`
+comment). If both laptops stay in service, leave both pubkeys in place.
+
+### Alternative: reuse the existing key
+
+Simplest, no Pi changes, but copies a private key over the network and can't be
+revoked per machine - prefer the per-machine key above. From the machine that
+still has it:
 
 ```bash
 scp ~/.ssh/id_rpi5_macbook_air <new-machine>:~/.ssh/
@@ -117,29 +176,6 @@ On the new machine, load it (or just re-run `./install.sh`, which now does this)
 chmod 600 ~/.ssh/id_rpi5_macbook_air
 ssh-add --apple-use-keychain ~/.ssh/id_rpi5_macbook_air
 ```
-
-**B - issue a per-machine key (cleaner, one step per Pi).** Generate on the new
-machine, then authorize it on each Pi from a machine that can already reach them:
-
-```bash
-ssh-keygen -t ed25519 -C "id_rpi5_<new-machine>" -f ~/.ssh/id_rpi5_macbook_air
-ssh-copy-id -i ~/.ssh/id_rpi5_macbook_air.pub pi5   # User pi
-ssh-copy-id -i ~/.ssh/id_rpi5_macbook_air.pub pi4   # User domengabrovsek
-```
-
-(If you prefer a distinct filename per machine, point the Pi `IdentityFile`
-lines in `ssh.config` at it instead of overwriting `id_rpi5_macbook_air`.)
-
-### Verify
-
-```bash
-ssh pi5           # LAN     (192.168.0.x)
-ssh pi5-remote    # Tailscale (100.x, works off-network)
-ssh pi4
-```
-
-If `pi5` works but `pi5-remote` hangs, the new machine isn't on the tailnet
-(re-check step 2). If both hang, the key isn't authorized on the Pi (key path).
 
 ## Adding another client
 
