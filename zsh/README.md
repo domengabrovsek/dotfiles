@@ -98,21 +98,32 @@ This means any edit you make in `~/.zsh/` directly modifies the repo - you can `
 ### Prompt
 
 ```
-pi5 · ~/.ssh ⬢ v24.19.0 →
-mbp · home-infra ±(feat/host-dashboards) ✗ gcp:pentla-staging ⬢ v24.18.0 →
+hostname · parent/current (branch) · node →
 ```
 
-The hostname leads, separated by ` · `. The same config runs on the Mac and on
-every homelab host, and they are all reachable from each other, so the prompt
-has to say which machine you are on.
+```
+pi5 · dev/repos ⬢ v24.18.0 →
+domen-mbp · personal/dotfiles ±(main) ✗ gcp:pentla-staging · ⬢ v24.18.0 →
+```
 
-It defaults to `%m`, the short hostname. That is already right on the Pis
-(`pi5`, `pi4`, `air`), but macOS reports the full computer name, so shorten it
-per machine in `~/.zshrc.local`:
+Two dots divide it into three parts: where you are, what you are on, and what
+you are running. Both use the same grey, and nothing else in the prompt uses
+that colour, so the boundaries are findable without reading the words. The
+node dot travels with its segment and disappears on a machine with no node.
+
+The hostname leads because the same config runs on the Mac and every homelab
+host, and they are all reachable from each other, so the prompt has to say
+which machine you are typing on. It defaults to `%m`, the short hostname,
+already correct on `pi5`, `pi4`, and `air`. If a machine reports something too
+long, shorten it in `~/.zshrc.local`:
 
 ```bash
 ZSH_PROMPT_HOST=mbp
 ```
+
+The directory is `%2~`, the parent plus the current folder. `%1~` showed only
+the leaf, which collapses every `src`, `modules`, and `docs` across every repo
+to the same word.
 
 ### Help System
 

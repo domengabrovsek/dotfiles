@@ -33,7 +33,9 @@ _update_node_version_cache() {
 
 function node_version() {
   if [[ -n "$_cached_node_version" ]]; then
-    echo "%F{yellow}⬢ ${_cached_node_version}%f"
+    # Carries its own separator so the dot disappears with the segment, rather
+    # than dangling on a machine with no node installed.
+    echo "$(prompt_sep) %F{yellow}⬢ ${_cached_node_version}%f"
   fi
 }
 
@@ -90,6 +92,19 @@ function gcp_profile() {
 _update_gcp_config_cache
 
 # ============================================================================
+# Section Separator
+# ============================================================================
+
+# Both dots share one colour, and that colour is used by nothing else in the
+# prompt, so section boundaries are findable without reading the content.
+# Grey 244 sits behind the segments it divides rather than competing with them.
+PROMPT_SEP_COLOR="244"
+
+function prompt_sep() {
+  echo "%F{$PROMPT_SEP_COLOR}·%f"
+}
+
+# ============================================================================
 # Hostname Display
 # ============================================================================
 
@@ -107,8 +122,10 @@ function prompt_host() {
 # Prompt Definition
 # ============================================================================
 
-# Custom prompt - showing hostname, last directory (%1~) and git icon (±)
-PROMPT='$(prompt_host)%F{244} · %f%{$fg[cyan]%}%1~%{$reset_color%} $(git_prompt_info)$(aws_profile)$(gcp_profile)$(node_version) %{$fg[blue]%}→%{$reset_color%} '
+# hostname · parent/current (branch) · node →
+# %2~ keeps the parent directory, which disambiguates the many same-named leaf
+# dirs across repos (src, modules, docs) that %1~ collapsed to one word.
+PROMPT='$(prompt_host) $(prompt_sep) %{$fg[cyan]%}%2~%{$reset_color%} $(git_prompt_info)$(aws_profile)$(gcp_profile)$(node_version) %{$fg[blue]%}→%{$reset_color%} '
 
 # Git prompt settings with icon
 ZSH_THEME_GIT_PROMPT_PREFIX="%{$fg_bold[blue]%}±(%{$fg[red]%}"
