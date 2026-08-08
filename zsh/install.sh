@@ -9,19 +9,43 @@ set -e
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ZSH_CUSTOM="${ZSH_CUSTOM:-$HOME/.oh-my-zsh/custom}"
 
-echo "Setting up zsh config from: $SCRIPT_DIR"
+case "$(uname -s)" in
+  Darwin) PLATFORM="macos" ;;
+  Linux)  PLATFORM="linux" ;;
+  *) echo "Unsupported platform: $(uname -s)"; exit 1 ;;
+esac
+
+echo "Setting up zsh config from: $SCRIPT_DIR ($PLATFORM)"
 echo ""
 
 # ============================================================================
-# 1. Homebrew (needed for everything else)
+# 1. Package manager + zsh
 # ============================================================================
+# macOS ships zsh and gets its CLI tools from Homebrew. Debian/Ubuntu ships
+# neither, and Homebrew publishes no ARM64 Linux bottles - every formula would
+# compile from source - so apt provides both there.
 
-if ! command -v brew &> /dev/null; then
-  echo "Installing Homebrew..."
-  /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
-  eval "$(/opt/homebrew/bin/brew shellenv)"
+if [ "$PLATFORM" = "macos" ]; then
+  if ! command -v brew &> /dev/null; then
+    echo "Installing Homebrew..."
+    /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+    eval "$(/opt/homebrew/bin/brew shellenv)"
+  else
+    echo "[ok] Homebrew"
+  fi
 else
-  echo "[ok] Homebrew"
+  if ! command -v apt-get &> /dev/null; then
+    echo "This installer supports Debian/Ubuntu on Linux (needs apt-get)."
+    exit 1
+  fi
+  # Oh My Zsh aborts if zsh is missing, so it has to land before step 2.
+  if ! command -v zsh &> /dev/null; then
+    echo "Installing zsh..."
+    sudo apt-get update -qq
+    sudo apt-get install -y zsh
+  else
+    echo "[ok] zsh"
+  fi
 fi
 
 # ============================================================================
@@ -61,16 +85,24 @@ tools=(fzf eza bat zoxide)
 missing=()
 
 for tool in "${tools[@]}"; do
-  if ! command -v "$tool" &> /dev/null; then
-    missing+=("$tool")
-  else
+  if command -v "$tool" &> /dev/null; then
     echo "[ok] $tool"
+  # Debian/Ubuntu ship bat's binary as batcat, to avoid a clash with an
+  # unrelated package of the same name. aliases.zsh handles both spellings.
+  elif [ "$tool" = "bat" ] && command -v batcat &> /dev/null; then
+    echo "[ok] bat (installed as batcat)"
+  else
+    missing+=("$tool")
   fi
 done
 
 if [ ${#missing[@]} -gt 0 ]; then
   echo "Installing: ${missing[*]}..."
-  brew install "${missing[@]}"
+  if [ "$PLATFORM" = "macos" ]; then
+    brew install "${missing[@]}"
+  else
+    sudo apt-get install -y "${missing[@]}"
+  fi
 fi
 
 # ============================================================================
@@ -110,22 +142,29 @@ fi
 # 6. Cloud CLIs + accounts (AWS, GCP)
 # ============================================================================
 
-# Ensure the cloud CLIs are present. gcloud + session-manager-plugin ship as casks.
-if command -v aws &> /dev/null; then echo "[ok] awscli"; else echo "Installing awscli..."; brew install awscli; fi
-if command -v gcloud &> /dev/null; then echo "[ok] gcloud"; else echo "Installing google-cloud-sdk..."; brew install --cask google-cloud-sdk; fi
-if command -v session-manager-plugin &> /dev/null; then echo "[ok] session-manager-plugin"; else echo "Installing session-manager-plugin..."; brew install --cask session-manager-plugin; fi
+# Workstation-only. gcloud and session-manager-plugin ship as casks, which are
+# macOS-only, and the homelab hosts have no reason to hold cloud credentials.
+# environment.zsh and completions.zsh already guard every path this section
+# creates, so skipping it leaves a working shell rather than a broken one.
+if [ "$PLATFORM" = "macos" ]; then
+  if command -v aws &> /dev/null; then echo "[ok] awscli"; else echo "Installing awscli..."; brew install awscli; fi
+  if command -v gcloud &> /dev/null; then echo "[ok] gcloud"; else echo "Installing google-cloud-sdk..."; brew install --cask google-cloud-sdk; fi
+  if command -v session-manager-plugin &> /dev/null; then echo "[ok] session-manager-plugin"; else echo "Installing session-manager-plugin..."; brew install --cask session-manager-plugin; fi
 
-# Symlink the SSO config (no secrets in it) so `aws sso login --sso-session personal` works.
-mkdir -p "$HOME/.aws"
-if [ -f "$HOME/.aws/config" ] && [ ! -L "$HOME/.aws/config" ]; then
-  mv "$HOME/.aws/config" "$HOME/.aws/config.backup-$(date +%Y%m%d-%H%M%S)"
-fi
-ln -sf "$SCRIPT_DIR/aws/config" "$HOME/.aws/config"
-echo "[ok] ~/.aws/config -> $SCRIPT_DIR/aws/config"
+  # Symlink the SSO config (no secrets in it) so `aws sso login --sso-session personal` works.
+  mkdir -p "$HOME/.aws"
+  if [ -f "$HOME/.aws/config" ] && [ ! -L "$HOME/.aws/config" ]; then
+    mv "$HOME/.aws/config" "$HOME/.aws/config.backup-$(date +%Y%m%d-%H%M%S)"
+  fi
+  ln -sf "$SCRIPT_DIR/aws/config" "$HOME/.aws/config"
+  echo "[ok] ~/.aws/config -> $SCRIPT_DIR/aws/config"
 
-# Seed gcloud configurations (idempotent - creates each only if missing).
-if [ -x "$SCRIPT_DIR/gcp/configurations.sh" ]; then
-  "$SCRIPT_DIR/gcp/configurations.sh"
+  # Seed gcloud configurations (idempotent - creates each only if missing).
+  if [ -x "$SCRIPT_DIR/gcp/configurations.sh" ]; then
+    "$SCRIPT_DIR/gcp/configurations.sh"
+  fi
+else
+  echo "[skip] cloud CLIs (workstation only)"
 fi
 
 # ============================================================================
@@ -167,6 +206,26 @@ echo "[ok] ~/.zshenv -> ~/.zsh/.zshenv"
 
 # Ensure cache dir exists
 mkdir -p "$SCRIPT_DIR/cache"
+
+# ============================================================================
+# 8. Login shell
+# ============================================================================
+# macOS already defaults to zsh. Debian/Ubuntu defaults to bash, so without this
+# the config only loads when zsh is started by hand.
+
+if [ "$PLATFORM" = "linux" ] && [ "$(basename "${SHELL:-}")" != "zsh" ]; then
+  zsh_path="$(command -v zsh)"
+  grep -qxF "$zsh_path" /etc/shells 2>/dev/null || echo "$zsh_path" | sudo tee -a /etc/shells > /dev/null
+  # via sudo because plain chsh prompts for the account password, which breaks
+  # any non-interactive run
+  if sudo chsh -s "$zsh_path" "$USER"; then
+    echo "[ok] login shell -> $zsh_path (takes effect next login)"
+  else
+    echo "[warn] could not change login shell; run: chsh -s $zsh_path"
+  fi
+else
+  echo "[ok] login shell is zsh"
+fi
 
 # ============================================================================
 # Done
