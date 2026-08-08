@@ -102,8 +102,8 @@ hostname · parent/current (branch) · node →
 ```
 
 ```
-pi5 · dev/repos ⬢ v24.18.0 →
-domen-mbp · personal/dotfiles ±(main) ✗ gcp:pentla-staging · ⬢ v24.18.0 →
+pi5 · dev/repos · v24.18.0 →
+domen-mbp · personal/dotfiles ±(main) gcp:pentla-staging · v24.18.0 →
 ```
 
 Two dots divide it into three parts: where you are, what you are on, and what

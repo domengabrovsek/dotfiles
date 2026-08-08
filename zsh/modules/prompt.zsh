@@ -35,7 +35,7 @@ function node_version() {
   if [[ -n "$_cached_node_version" ]]; then
     # Carries its own separator so the dot disappears with the segment, rather
     # than dangling on a machine with no node installed.
-    echo "$(prompt_sep) %F{yellow}⬢ ${_cached_node_version}%f"
+    echo "$(prompt_sep) %F{yellow}${_cached_node_version}%f"
   fi
 }
 
@@ -130,5 +130,5 @@ PROMPT='$(prompt_host) $(prompt_sep) %{$fg[cyan]%}%2~%{$reset_color%} $(git_prom
 # Git prompt settings with icon
 ZSH_THEME_GIT_PROMPT_PREFIX="%{$fg_bold[blue]%}±(%{$fg[red]%}"
 ZSH_THEME_GIT_PROMPT_SUFFIX="%{$reset_color%} "
-ZSH_THEME_GIT_PROMPT_DIRTY="%{$fg[blue]%}) %{$fg[yellow]%}✗"
+ZSH_THEME_GIT_PROMPT_DIRTY="%{$fg[blue]%})"
 ZSH_THEME_GIT_PROMPT_CLEAN="%{$fg[blue]%})"
