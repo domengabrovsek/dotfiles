@@ -101,3 +101,8 @@ if [[ -z "$ZSH_DISABLE_WELCOME" ]]; then
   fi
 fi
 export PATH="/opt/homebrew/opt/libpq/bin:$PATH"
+
+# Added by LM Studio CLI (lms)
+export PATH="$PATH:/Users/domengabrovsek/.lmstudio/bin"
+# End of LM Studio CLI section
+
