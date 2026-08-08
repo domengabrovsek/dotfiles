@@ -29,9 +29,14 @@ else
 fi
 
 # Modern cat replacement (if bat is installed)
+# Debian/Ubuntu install the binary as batcat, to avoid a clash with an unrelated
+# package that already owns the name bat.
 if command -v bat &> /dev/null; then
   alias cat='bat --paging=never'
   alias catp='bat'  # bat with pager
+elif command -v batcat &> /dev/null; then
+  alias cat='batcat --paging=never'
+  alias catp='batcat'
 fi
 
 # ============================================================================

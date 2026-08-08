@@ -44,8 +44,16 @@ fi
 # Editor Configuration
 # ============================================================================
 
-export EDITOR='code -w'
-export VISUAL='code -w'
+# Headless hosts have no VS Code, and an unusable EDITOR only surfaces when
+# something like git commit tries to open it.
+if command -v code &> /dev/null; then
+  export EDITOR='code -w'
+elif command -v vim &> /dev/null; then
+  export EDITOR='vim'
+else
+  export EDITOR='vi'
+fi
+export VISUAL="$EDITOR"
 
 # ============================================================================
 # History Configuration

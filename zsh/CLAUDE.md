@@ -13,7 +13,7 @@ Modular zsh configuration. Symlink-based: `~/.zsh` -> this repo, `~/.zshrc` -> `
 - `modules/completions.zsh` - Cached completions for kubectl/helm (written to `cache/` dir), lazy npm completion, Docker/AWS/GCP/Terraform completions.
 - `modules/prompt.zsh` - Custom prompt with cached node version (updated on PATH change via `precmd`), AWS profile display, git info.
 - `modules/gcp.zsh` - GCP Cloud Run debugging shortcuts (cr-find, cr-image, cr-logs, etc.), Artifact Registry helpers, gcp-debug-help.
-- `install.sh` - Idempotent setup script. Installs Homebrew, Oh My Zsh, zsh plugins, CLI tools (fzf, eza, bat, zoxide), creates symlinks.
+- `install.sh` - Idempotent setup script. Installs Oh My Zsh, zsh plugins, CLI tools (fzf, eza, bat, zoxide), nvm + Node, creates symlinks. Platform-aware: Homebrew on macOS, apt on Debian/Ubuntu, where it also installs zsh and sets it as the login shell. Cloud CLIs are macOS-only.
 
 ## Key Design Decisions
 
@@ -37,5 +37,7 @@ Modular zsh configuration. Symlink-based: `~/.zsh` -> this repo, `~/.zshrc` -> `
 - macOS `date` doesn't support `%N` (nanoseconds). Use `$EPOCHREALTIME` from `zsh/datetime` module.
 - `COMPLETE_ALIASES` setopt is intentionally removed - it breaks alias completion expansion.
 - `fd()` was renamed to `fdir()` to avoid shadowing `fd-find` (`brew install fd`).
+- Debian/Ubuntu install bat's binary as `batcat`. `aliases.zsh` checks both spellings; a bare `command -v bat` test silently does nothing on those hosts.
+- Homebrew has no ARM64 Linux bottles, so it must not be used on the aarch64 homelab hosts - `brew install` would build from source. Use apt there.
 - EDITOR is set to `code -w` (not `code --wait`) because `--wait` with spaces causes issues when used in shell aliases.
 - Cache dir (`~/.zsh/cache/`) is gitignored and created by `install.sh`.

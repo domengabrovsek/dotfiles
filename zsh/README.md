@@ -42,9 +42,19 @@ cd dotfiles/zsh
 ./install.sh
 ```
 
-The install script handles everything: Homebrew, Oh My Zsh, plugins, CLI tools (fzf, eza, bat, zoxide), nvm + Node LTS, the cloud CLIs (aws, gcloud) with your AWS SSO and gcloud accounts seeded, and symlinks. It's idempotent and safe to re-run.
+The install script handles everything: Oh My Zsh, plugins, CLI tools (fzf, eza, bat, zoxide), nvm + Node LTS, and symlinks. It's idempotent and safe to re-run.
 
-After install, open a new terminal or run `exec zsh`.
+It detects the platform and adapts:
+
+| | macOS | Debian / Ubuntu |
+|---|---|---|
+| CLI tools from | Homebrew | apt |
+| zsh | already present | installed, and set as the login shell |
+| Cloud CLIs (aws, gcloud, session-manager-plugin) | installed, AWS SSO and gcloud accounts seeded | skipped |
+
+Homebrew is not used on Linux: it publishes no ARM64 bottles, so every formula would compile from source, and apt carries all four tools. The cloud CLIs are workstation-only, so the homelab hosts don't hold cloud credentials. Every path they set up is guarded in `environment.zsh` and `completions.zsh`, so skipping them leaves a working shell.
+
+After install, open a new terminal or run `exec zsh`. On Linux the login shell change takes effect at the next login.
 
 ### How It Works (Symlink-Based)
 
