@@ -42,7 +42,9 @@ cd dotfiles/zsh
 ./install.sh
 ```
 
-The install script handles everything: Oh My Zsh, plugins, CLI tools (fzf, eza, bat, zoxide), nvm + Node LTS, and symlinks. It's idempotent and safe to re-run.
+The install script handles everything: Oh My Zsh, plugins, CLI tools (fzf, eza, bat, zoxide), nvm + Node, and symlinks. It's idempotent and safe to re-run.
+
+Node is pinned to an exact version by `NODE_VERSION` in `install.sh`, so every machine runs the same toolchain. Bump that one line and re-run the script on each machine to move them all together.
 
 It detects the platform and adapts:
 

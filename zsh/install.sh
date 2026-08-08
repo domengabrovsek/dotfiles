@@ -113,6 +113,10 @@ fi
 # the classic ~/.nvm layout, so install nvm there rather than via Homebrew (whose
 # nvm.sh lives outside NVM_DIR and is skipped once NVM_DIR is pinned).
 NVM_VERSION="v0.40.6"
+# Pinned to an exact patch, not a major or lts/*. A major-only default alias
+# resolves against whatever happens to be installed locally, which drifted the
+# four machines onto four different versions of Node 24.
+NODE_VERSION="24.18.0"
 export NVM_DIR="$HOME/.nvm"
 
 if [ ! -s "$NVM_DIR/nvm.sh" ]; then
@@ -126,16 +130,14 @@ fi
 # shellcheck source=/dev/null
 . "$NVM_DIR/nvm.sh"
 
-if [ ! -s "$NVM_DIR/alias/default" ]; then
-  echo "Installing Node LTS and setting it as default..."
-  nvm install --lts
-  # Pin the default to the major version (e.g. "24"), the form .zshenv resolves
-  # against ~/.nvm/versions/node. An "lts/*" glob default is not resolvable there.
-  node_major="$(nvm current)"; node_major="${node_major#v}"; node_major="${node_major%%.*}"
-  nvm alias default "$node_major"
-  unset node_major
+# .zshenv resolves the default alias against ~/.nvm/versions/node, so the alias
+# has to be a plain version string - an "lts/*" glob is not resolvable there.
+if [ "$(nvm version default)" = "v$NODE_VERSION" ]; then
+  echo "[ok] Node (v$NODE_VERSION)"
 else
-  echo "[ok] Node ($(nvm version default))"
+  echo "Installing Node v$NODE_VERSION and setting it as default..."
+  nvm install "$NODE_VERSION"
+  nvm alias default "$NODE_VERSION"
 fi
 
 # ============================================================================
