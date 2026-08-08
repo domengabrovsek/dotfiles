@@ -114,7 +114,7 @@ function prompt_sep() {
 # the full computer name (Domens-MacBook-Pro) rather than a short one.
 
 function prompt_host() {
-  echo "%F{magenta}▣ ${ZSH_PROMPT_HOST:-%m}%f"
+  echo "%F{magenta}💻 ${ZSH_PROMPT_HOST:-%m}%f"
 }
 
 # ============================================================================
@@ -131,7 +131,7 @@ function git_segment() {
   fi
 }
 
-# ▣ hostname · 📁 parent/current · ±(branch) · ☁︎ aws · ☁︎ gcp · ⬢ node →
+# 💻 hostname · 📁 parent/current · ±(branch) · ☁︎ aws · ☁︎ gcp · ⬢ node →
 # Every section carries a glyph, so the eye can find one without reading any of
 # the others. Every segment past the directory supplies its own leading
 # separator, so a dot only ever appears between two segments that are present.
