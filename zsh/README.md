@@ -103,7 +103,7 @@ hostname · parent/current · (branch) · aws · gcp · node →
 
 ```
 pi5 · dev/repos · v24.18.0 →
-domen-mbp · personal/dotfiles · ±(main) · gcp:pentla-staging · v24.18.0 →
+domen-mbp · personal/dotfiles · ±(main) · ☁︎ pentla-staging · v24.18.0 →
 ```
 
 A dot sits between every pair of sections. They all share one grey, used by
@@ -125,6 +125,10 @@ ZSH_PROMPT_HOST=mbp
 The directory is `%2~`, the parent plus the current folder. `%1~` showed only
 the leaf, which collapses every `src`, `modules`, and `docs` across every repo
 to the same word.
+
+AWS and GCP share the `☁︎` glyph and are told apart by colour - 208 for AWS
+orange, 33 for Google blue - so two cloud segments read as one idea with two
+providers rather than two unrelated things.
 
 ### Help System
 

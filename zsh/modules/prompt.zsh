@@ -81,7 +81,9 @@ _update_gcp_config_cache() {
 
 function gcp_profile() {
   if [[ -n "$_cached_gcp_config" && "$_cached_gcp_config" != "default" ]]; then
-    echo " $(prompt_sep) %F{33}gcp:${_cached_gcp_config}%f"
+    # Same glyph as AWS, distinguished by colour: 208 is AWS orange, 33 is
+    # Google blue. Two cloud segments read as one idea with two providers.
+    echo " $(prompt_sep) %F{33}☁︎ ${_cached_gcp_config}%f"
   fi
 }
 
