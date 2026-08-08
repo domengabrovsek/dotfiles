@@ -33,7 +33,7 @@ _update_node_version_cache() {
 
 function node_version() {
   if [[ -n "$_cached_node_version" ]]; then
-    echo "%F{yellow}⬢ ${_cached_node_version}%f"
+    echo " $(prompt_sep) %F{yellow}⬢ ${_cached_node_version}%f"
   fi
 }
 
@@ -59,10 +59,9 @@ _prompt_last_path="$PATH"
 # ============================================================================
 
 function aws_profile() {
-  if [[ -n "$AWS_PROFILE" ]]; then
-    echo "%F{208}☁︎ $AWS_PROFILE%f "
-  elif [[ -n "$AWS_DEFAULT_PROFILE" ]]; then
-    echo "%F{208}☁︎ $AWS_DEFAULT_PROFILE%f "
+  local profile="${AWS_PROFILE:-$AWS_DEFAULT_PROFILE}"
+  if [[ -n "$profile" ]]; then
+    echo " $(prompt_sep) %F{208}☁︎ $profile%f"
   fi
 }
 
@@ -82,7 +81,9 @@ _update_gcp_config_cache() {
 
 function gcp_profile() {
   if [[ -n "$_cached_gcp_config" && "$_cached_gcp_config" != "default" ]]; then
-    echo "%F{33}gcp:${_cached_gcp_config}%f "
+    # Same glyph as AWS, distinguished by colour: 208 is AWS orange, 33 is
+    # Google blue. Two cloud segments read as one idea with two providers.
+    echo " $(prompt_sep) %F{33}☁︎ ${_cached_gcp_config}%f"
   fi
 }
 
@@ -90,14 +91,57 @@ function gcp_profile() {
 _update_gcp_config_cache
 
 # ============================================================================
+# Section Separator
+# ============================================================================
+
+# Both dots share one colour, and that colour is used by nothing else in the
+# prompt, so section boundaries are findable without reading the content.
+# Grey 244 sits behind the segments it divides rather than competing with them.
+PROMPT_SEP_COLOR="244"
+
+function prompt_sep() {
+  echo "%F{$PROMPT_SEP_COLOR}·%f"
+}
+
+# ============================================================================
+# Hostname Display
+# ============================================================================
+
+# This config is shared across the Mac and the homelab hosts, and every one of
+# them is reachable from the others, so the prompt has to say which machine you
+# are on. Read at render time, so setting ZSH_PROMPT_HOST in ~/.zshrc.local
+# takes effect regardless of load order - needed on macOS, where %m expands to
+# the full computer name (Domens-MacBook-Pro) rather than a short one.
+
+function prompt_host() {
+  echo "%F{magenta}💻 ${ZSH_PROMPT_HOST:-%m}%f"
+}
+
+# ============================================================================
 # Prompt Definition
 # ============================================================================
 
-# Custom prompt - showing last directory (%1~) and git icon (±)
-PROMPT='%{$fg[cyan]%}%1~%{$reset_color%} $(git_prompt_info)$(aws_profile)$(gcp_profile)$(node_version) %{$fg[blue]%}→%{$reset_color%} '
+# git_prompt_info comes from Oh My Zsh and cannot emit its own separator, so
+# wrap it. Outside a repo it returns empty and the dot goes with it.
+function git_segment() {
+  local info
+  info="$(git_prompt_info)"
+  if [[ -n "$info" ]]; then
+    echo " $(prompt_sep) $info"
+  fi
+}
 
-# Git prompt settings with icon
+# 💻 hostname · 📁 parent/current · ±(branch) · ☁︎ aws · ☁︎ gcp · ⬢ node →
+# Every section carries a glyph, so the eye can find one without reading any of
+# the others. Every segment past the directory supplies its own leading
+# separator, so a dot only ever appears between two segments that are present.
+# %2~ keeps the parent directory, which disambiguates the many same-named leaf
+# dirs across repos (src, modules, docs) that %1~ collapsed to one word.
+PROMPT='$(prompt_host) $(prompt_sep) %{$fg[cyan]%}📁 %2~%{$reset_color%}$(git_segment)$(aws_profile)$(gcp_profile)$(node_version) %{$fg[blue]%}→%{$reset_color%} '
+
+# Git prompt settings with icon. No trailing space in the suffix - spacing is
+# owned by git_segment so the separator logic stays in one place.
 ZSH_THEME_GIT_PROMPT_PREFIX="%{$fg_bold[blue]%}±(%{$fg[red]%}"
-ZSH_THEME_GIT_PROMPT_SUFFIX="%{$reset_color%} "
-ZSH_THEME_GIT_PROMPT_DIRTY="%{$fg[blue]%}) %{$fg[yellow]%}✗"
+ZSH_THEME_GIT_PROMPT_SUFFIX="%{$reset_color%}"
+ZSH_THEME_GIT_PROMPT_DIRTY="%{$fg[blue]%})"
 ZSH_THEME_GIT_PROMPT_CLEAN="%{$fg[blue]%})"

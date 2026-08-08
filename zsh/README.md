@@ -91,9 +91,46 @@ This means any edit you make in `~/.zsh/` directly modifies the repo - you can `
 - **Autosuggestions** - Fish-style suggestions from history and completions
 - **Syntax highlighting** - Commands colored as you type (green=valid, red=invalid)
 - **GCP Cloud Run tools** - Debug Cloud Run services, images, logs, and revisions
-- **Custom prompt** - Directory, git branch, AWS profile, node version
+- **Custom prompt** - Hostname, directory, git branch, AWS profile, node version
 
 ## Usage
+
+### Prompt
+
+```
+💻 hostname · 📁 parent/current · ±(branch) · ☁︎ aws · ☁︎ gcp · ⬢ node →
+```
+
+```
+💻 pi5 · 📁 dev/repos · ⬢ v24.18.0 →
+💻 domen-mbp · 📁 personal/dotfiles · ±(main) · ☁︎ pentla-staging · ⬢ v24.18.0 →
+```
+
+Every section carries a glyph, so you can find one without reading the others.
+
+A dot sits between every pair of sections. They all share one grey, used by
+nothing else in the prompt, so the boundaries are findable without reading the
+words. Each segment past the directory carries its own leading dot, so a dot
+only ever appears between two segments that are both present - outside a repo,
+or on a machine with no node, the segment and its dot vanish together.
+
+The hostname leads because the same config runs on the Mac and every homelab
+host, and they are all reachable from each other, so the prompt has to say
+which machine you are typing on. It defaults to `%m`, the short hostname,
+already correct on `pi5`, `pi4`, and `air`. If a machine reports something too
+long, shorten it in `~/.zshrc.local`:
+
+```bash
+ZSH_PROMPT_HOST=mbp
+```
+
+The directory is `%2~`, the parent plus the current folder. `%1~` showed only
+the leaf, which collapses every `src`, `modules`, and `docs` across every repo
+to the same word.
+
+AWS and GCP share the `☁︎` glyph and are told apart by colour - 208 for AWS
+orange, 33 for Google blue - so two cloud segments read as one idea with two
+providers rather than two unrelated things.
 
 ### Help System
 
