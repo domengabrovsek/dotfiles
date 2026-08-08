@@ -91,9 +91,28 @@ This means any edit you make in `~/.zsh/` directly modifies the repo - you can `
 - **Autosuggestions** - Fish-style suggestions from history and completions
 - **Syntax highlighting** - Commands colored as you type (green=valid, red=invalid)
 - **GCP Cloud Run tools** - Debug Cloud Run services, images, logs, and revisions
-- **Custom prompt** - Directory, git branch, AWS profile, node version
+- **Custom prompt** - Hostname, directory, git branch, AWS profile, node version
 
 ## Usage
+
+### Prompt
+
+```
+pi5 · ~/.ssh ⬢ v24.19.0 →
+mbp · home-infra ±(feat/host-dashboards) ✗ gcp:pentla-staging ⬢ v24.18.0 →
+```
+
+The hostname leads, separated by ` · `. The same config runs on the Mac and on
+every homelab host, and they are all reachable from each other, so the prompt
+has to say which machine you are on.
+
+It defaults to `%m`, the short hostname. That is already right on the Pis
+(`pi5`, `pi4`, `air`), but macOS reports the full computer name, so shorten it
+per machine in `~/.zshrc.local`:
+
+```bash
+ZSH_PROMPT_HOST=mbp
+```
 
 ### Help System
 

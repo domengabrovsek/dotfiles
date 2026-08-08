@@ -90,11 +90,25 @@ function gcp_profile() {
 _update_gcp_config_cache
 
 # ============================================================================
+# Hostname Display
+# ============================================================================
+
+# This config is shared across the Mac and the homelab hosts, and every one of
+# them is reachable from the others, so the prompt has to say which machine you
+# are on. Read at render time, so setting ZSH_PROMPT_HOST in ~/.zshrc.local
+# takes effect regardless of load order - needed on macOS, where %m expands to
+# the full computer name (Domens-MacBook-Pro) rather than a short one.
+
+function prompt_host() {
+  echo "%F{magenta}${ZSH_PROMPT_HOST:-%m}%f"
+}
+
+# ============================================================================
 # Prompt Definition
 # ============================================================================
 
-# Custom prompt - showing last directory (%1~) and git icon (±)
-PROMPT='%{$fg[cyan]%}%1~%{$reset_color%} $(git_prompt_info)$(aws_profile)$(gcp_profile)$(node_version) %{$fg[blue]%}→%{$reset_color%} '
+# Custom prompt - showing hostname, last directory (%1~) and git icon (±)
+PROMPT='$(prompt_host)%F{244} · %f%{$fg[cyan]%}%1~%{$reset_color%} $(git_prompt_info)$(aws_profile)$(gcp_profile)$(node_version) %{$fg[blue]%}→%{$reset_color%} '
 
 # Git prompt settings with icon
 ZSH_THEME_GIT_PROMPT_PREFIX="%{$fg_bold[blue]%}±(%{$fg[red]%}"
