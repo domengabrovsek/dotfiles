@@ -98,18 +98,19 @@ This means any edit you make in `~/.zsh/` directly modifies the repo - you can `
 ### Prompt
 
 ```
-hostname · parent/current (branch) · node →
+hostname · parent/current · (branch) · aws · gcp · node →
 ```
 
 ```
 pi5 · dev/repos · v24.18.0 →
-domen-mbp · personal/dotfiles ±(main) gcp:pentla-staging · v24.18.0 →
+domen-mbp · personal/dotfiles · ±(main) · gcp:pentla-staging · v24.18.0 →
 ```
 
-Two dots divide it into three parts: where you are, what you are on, and what
-you are running. Both use the same grey, and nothing else in the prompt uses
-that colour, so the boundaries are findable without reading the words. The
-node dot travels with its segment and disappears on a machine with no node.
+A dot sits between every pair of sections. They all share one grey, used by
+nothing else in the prompt, so the boundaries are findable without reading the
+words. Each segment past the directory carries its own leading dot, so a dot
+only ever appears between two segments that are both present - outside a repo,
+or on a machine with no node, the segment and its dot vanish together.
 
 The hostname leads because the same config runs on the Mac and every homelab
 host, and they are all reachable from each other, so the prompt has to say
