@@ -46,6 +46,12 @@ ZSH_THEME=""
 zstyle ':omz:plugins:nvm' autoload yes
 zstyle ':omz:plugins:nvm' silent-autoload yes
 
+# Oh My Zsh computes the git segment asynchronously and only registers the
+# background handler when it finds the literal `$(git_prompt_info)` in PROMPT.
+# modules/prompt.zsh calls it through the git_segment wrapper, so that scan
+# misses and the branch never appears. `force` registers unconditionally.
+zstyle ':omz:alpha:lib:git' async-prompt force
+
 # Oh My Zsh plugins
 # Note: completions are also managed in modules/completions.zsh
 plugins=(
