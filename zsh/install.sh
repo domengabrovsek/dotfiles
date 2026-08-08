@@ -97,11 +97,34 @@ for tool in "${tools[@]}"; do
 done
 
 if [ ${#missing[@]} -gt 0 ]; then
-  echo "Installing: ${missing[*]}..."
   if [ "$PLATFORM" = "macos" ]; then
+    echo "Installing: ${missing[*]}..."
     brew install "${missing[@]}"
   else
-    sudo apt-get install -y "${missing[@]}"
+    # Repos differ by release - Ubuntu 24.04 and later carry eza, Debian 12 does
+    # not. Filter to what this distro actually has, because one unknown package
+    # name makes apt-get exit non-zero, and under `set -e` that would abort the
+    # run before the symlinks and login shell are ever set up.
+    sudo apt-get update -qq
+    available=()
+    unavailable=()
+    for tool in "${missing[@]}"; do
+      if apt-cache show "$tool" > /dev/null 2>&1; then
+        available+=("$tool")
+      else
+        unavailable+=("$tool")
+      fi
+    done
+
+    if [ ${#available[@]} -gt 0 ]; then
+      echo "Installing: ${available[*]}..."
+      sudo apt-get install -y "${available[@]}"
+    fi
+
+    if [ ${#unavailable[@]} -gt 0 ]; then
+      echo "[warn] not packaged for $(. /etc/os-release && echo "$PRETTY_NAME"): ${unavailable[*]}"
+      echo "       aliases.zsh falls back to the standard tools, so the shell still works"
+    fi
   fi
 fi
 

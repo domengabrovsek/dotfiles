@@ -21,11 +21,22 @@ if command -v eza &> /dev/null; then
   alias lt='eza -lh --icons --git --sort=modified'
   alias tree='eza --tree --icons --git-ignore'
 else
-  alias ls='ls -G'
-  alias ll='ls -lh'
-  alias la='ls -lAh'
-  alias l='ls -CF'
-  alias lt='ls -lhtr'
+  # -G is the colour flag on BSD ls (macOS) but means "hide the group column" on
+  # GNU coreutils, so the flag has to be chosen per implementation rather than
+  # assumed. Reached on Debian 12, which does not package eza.
+  if ls --color=auto . > /dev/null 2>&1; then
+    alias ls='ls --color=auto'
+    alias ll='ls -lh --color=auto'
+    alias la='ls -lAh --color=auto'
+    alias l='ls -CF --color=auto'
+    alias lt='ls -lhtr --color=auto'
+  else
+    alias ls='ls -G'
+    alias ll='ls -lhG'
+    alias la='ls -lAhG'
+    alias l='ls -CFG'
+    alias lt='ls -lhtrG'
+  fi
 fi
 
 # Modern cat replacement (if bat is installed)
