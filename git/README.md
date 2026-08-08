@@ -4,6 +4,50 @@ Per-context git identity and SSH keys on one machine. Personal is the default;
 work repos under `~/dev/work/pentla/` commit as Pentla and push with a separate
 key. Structure extends to more clients by copying the pentla pieces.
 
+## Device inventory
+
+Every key in the setup, and which machine holds it. A key not in this table is
+not supposed to exist - that is the point of the table. Verified 2026-08-08.
+
+| Device | Kind | Reaches homelab? | Key -> GitHub | Key -> homelab |
+|---|---|---|---|---|
+| MacBook Pro | macOS, primary | yes | `id_personal` `SHA256:ixSR86nkdWaLCWRm1mmxPFXMZy6aaTyavXtqQNeS6fE` | `id_rpi5` `SHA256:/JoIqaKwlytWeAnpr3jrW/Ro9uj71MuQc5NQFo1z4rw` |
+| Work laptop | macOS, employer-managed | **no, by policy** | `SHA256:SEYZJJehkfcCiAbT3oea8XrskgM8fyoLHU3T3BfSUWo` | none |
+| pi5 | Raspberry Pi 5, Debian | n/a (is a host) | `id_github_rpi5` `SHA256:7NBRZFhlU7Me8iHFXkH8tvwMnSWl/NKxhylMRcd9GEw` | n/a |
+| pi4 | Raspberry Pi 4, Debian | n/a (is a host) | `id_github_rpi4` `SHA256:HErq5lFm6mP4eyXiHz1j0j2+OIgGmH+4ZvMbNle2624` | n/a |
+| air | M1 MacBook Air, Asahi Linux | n/a (is a host) | `id_github_air` `SHA256:Zl6UHPiDzYDkRSnTyHASx/z4Kk/CHKN/pwJXx/XVLB4` | n/a |
+
+The MacBook Pro also holds `id_pentla`
+(`SHA256:aQwBjrl2EG3ep7rinNMJQEtHclrX3CZ0WIIHtIaUUfw`) for the Pentla GitHub
+identity. It is not on the personal account's key list, so it does not appear in
+`https://github.com/domengabrovsek.keys`.
+
+### Access policy
+
+- The **work laptop reaches GitHub only**. It is deliberately absent from every
+  host's `authorized_keys`, and should stay that way - an employer-managed
+  machine is outside the trust boundary of the homelab.
+- Exactly **one** key is authorized on pi5, pi4, and air: the MacBook Pro's
+  `id_rpi5`, whose pubkey comment is `id_rpi5_macbook-pro`. Any second line in an
+  `authorized_keys` file is drift until this table says otherwise.
+- Each host holds **its own** GitHub key and never a copy of another host's, so
+  retiring a host is one deletion at <https://github.com/settings/keys>.
+
+### Expected state, and how to check it
+
+```bash
+# 3 keys in the Mac's agent: id_personal, id_pentla, id_rpi5
+ssh-add -l
+
+# exactly 1 authorized key per host, all three the same fingerprint
+for h in pi5 pi4 air; do echo "### $h"; ssh "$h" 'ssh-keygen -lf ~/.ssh/authorized_keys'; done
+
+# 5 keys on the personal GitHub account: Mac, work laptop, pi5, pi4, air
+curl -s https://github.com/domengabrovsek.keys | while read -r l; do
+  echo "$l" | ssh-keygen -lf - | awk '{print $2}'
+done
+```
+
 ## Setup (new machine) - full copy-paste flow
 
 This repo is **private** and a fresh machine has no SSH key yet, so bootstrap
@@ -179,7 +223,8 @@ for h in pi5 pi4 air; do
 done
 ```
 
-Every line should map to a machine still in service. To check whether a key is
+Every line should map to a device in the inventory at the top of this file.
+Anything else is drift - remove it. To check whether a key is
 actually in use before removing it, look at what has logged in recently - a key
 with no logins is safe to drop, one with hundreds is load-bearing:
 
@@ -218,13 +263,8 @@ Two different directions of access are easy to confuse, so keep them apart:
   Pis can `git pull` and `git push` their own clones. Covered here.
 
 Each host keeps its own GitHub key at `~/.ssh/id_github_<hostname>`, and every
-one of them is registered on the same `domengabrovsek` GitHub account:
-
-| Host | Key file | Fingerprint |
-|---|---|---|
-| pi5 | `~/.ssh/id_github_rpi5` | `SHA256:7NBRZFhlU7Me8iHFXkH8tvwMnSWl/NKxhylMRcd9GEw` |
-| pi4 | `~/.ssh/id_github_rpi4` | `SHA256:HErq5lFm6mP4eyXiHz1j0j2+OIgGmH+4ZvMbNle2624` |
-| air | `~/.ssh/id_github_air` | `SHA256:Zl6UHPiDzYDkRSnTyHASx/z4Kk/CHKN/pwJXx/XVLB4` |
+one of them is registered on the same `domengabrovsek` GitHub account. The
+fingerprints live in the device inventory at the top of this file.
 
 The `id_github_<hostname>` name is the convention - one key per host means a
 compromised or retired host is revoked by deleting a single key at
