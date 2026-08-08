@@ -33,7 +33,7 @@ _update_node_version_cache() {
 
 function node_version() {
   if [[ -n "$_cached_node_version" ]]; then
-    echo " $(prompt_sep) %F{yellow}${_cached_node_version}%f"
+    echo " $(prompt_sep) %F{yellow}⬢ ${_cached_node_version}%f"
   fi
 }
 
@@ -114,7 +114,7 @@ function prompt_sep() {
 # the full computer name (Domens-MacBook-Pro) rather than a short one.
 
 function prompt_host() {
-  echo "%F{magenta}${ZSH_PROMPT_HOST:-%m}%f"
+  echo "%F{magenta}▣ ${ZSH_PROMPT_HOST:-%m}%f"
 }
 
 # ============================================================================
@@ -131,12 +131,13 @@ function git_segment() {
   fi
 }
 
-# hostname · parent/current · (branch) · aws · gcp · node →
-# Every segment past the directory supplies its own leading separator, so a
-# dot only ever appears between two segments that are both present.
+# ▣ hostname · 📁 parent/current · ±(branch) · ☁︎ aws · ☁︎ gcp · ⬢ node →
+# Every section carries a glyph, so the eye can find one without reading any of
+# the others. Every segment past the directory supplies its own leading
+# separator, so a dot only ever appears between two segments that are present.
 # %2~ keeps the parent directory, which disambiguates the many same-named leaf
 # dirs across repos (src, modules, docs) that %1~ collapsed to one word.
-PROMPT='$(prompt_host) $(prompt_sep) %{$fg[cyan]%}%2~%{$reset_color%}$(git_segment)$(aws_profile)$(gcp_profile)$(node_version) %{$fg[blue]%}→%{$reset_color%} '
+PROMPT='$(prompt_host) $(prompt_sep) %{$fg[cyan]%}📁 %2~%{$reset_color%}$(git_segment)$(aws_profile)$(gcp_profile)$(node_version) %{$fg[blue]%}→%{$reset_color%} '
 
 # Git prompt settings with icon. No trailing space in the suffix - spacing is
 # owned by git_segment so the separator logic stays in one place.

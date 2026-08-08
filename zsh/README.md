@@ -98,13 +98,15 @@ This means any edit you make in `~/.zsh/` directly modifies the repo - you can `
 ### Prompt
 
 ```
-hostname · parent/current · (branch) · aws · gcp · node →
+▣ hostname · 📁 parent/current · ±(branch) · ☁︎ aws · ☁︎ gcp · ⬢ node →
 ```
 
 ```
-pi5 · dev/repos · v24.18.0 →
-domen-mbp · personal/dotfiles · ±(main) · ☁︎ pentla-staging · v24.18.0 →
+▣ pi5 · 📁 dev/repos · ⬢ v24.18.0 →
+▣ domen-mbp · 📁 personal/dotfiles · ±(main) · ☁︎ pentla-staging · ⬢ v24.18.0 →
 ```
+
+Every section carries a glyph, so you can find one without reading the others.
 
 A dot sits between every pair of sections. They all share one grey, used by
 nothing else in the prompt, so the boundaries are findable without reading the
