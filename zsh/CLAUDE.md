@@ -18,6 +18,7 @@ Modular zsh configuration. Symlink-based: `~/.zsh` -> this repo, `~/.zshrc` -> `
 ## Key Design Decisions
 
 - **NVM lazy loading**: Configured via `zstyle ':omz:plugins:nvm' lazy yes` before plugins array. NVM loads on first `node`/`npm`/`nvm` call, not at shell start.
+- **Pinned Node version**: `NODE_VERSION` in `install.sh` sets the nvm default to an exact patch. A major-only alias (`default -> 24`) resolves against whatever is installed locally, so machines silently drift apart. `.zshenv` resolves the alias by path, so the value must be a plain version string, never `lts/*`.
 - **Hostname in the prompt**: `prompt_host()` reads `ZSH_PROMPT_HOST` at render time, not load time, so `~/.zshrc.local` can override it despite being sourced after the modules. Falls back to `%m`, which is short on the Pis but expands to the full computer name on macOS.
 - **Node version caching**: `prompt.zsh` caches the node version, updates on PATH change via `precmd` hook (catches `nvm use`, `nvm install`, `.nvmrc` auto-switch). Extracts version from NVM path string without subprocess. Cost: one PATH string comparison per prompt.
 - **Completion caching**: kubectl/helm completions written to `cache/*.zsh` files, regenerated only when the binary is newer than the cache file (`-nt` test).
