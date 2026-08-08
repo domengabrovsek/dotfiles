@@ -76,14 +76,20 @@ Confirm the active identity in any repo with `git config user.email`.
 
 ## Homelab Raspberry Pis
 
-`ssh.config` also defines aliases for the homelab Pis, so `ssh pi5` / `ssh pi4`
-work on a new machine the moment the config is Included. Each Pi has two
-aliases:
+`ssh.config` also defines aliases for the homelab hosts, so `ssh pi5` / `ssh pi4`
+/ `ssh air` work on a new machine the moment the config is Included. Each host
+has two aliases - the bare name for the LAN IP, and `<name>-remote` for the
+Tailscale IP:
 
-| Alias | Host | Use |
-|---|---|---|
-| `pi5` / `pi4` | LAN IP (`192.168.0.x`) | on the home network |
-| `pi5-remote` / `pi4-remote` | Tailscale IP (`100.x`) | off the home network |
+| Host | Login user | LAN alias | LAN IP | Remote alias | Tailscale IP |
+|---|---|---|---|---|---|
+| pi5 (Raspberry Pi 5) | `pi` | `pi5` | `192.168.0.2` | `pi5-remote` | `100.108.45.53` |
+| pi4 (Raspberry Pi 4) | `domengabrovsek` | `pi4` | `192.168.0.3` | `pi4-remote` | `100.108.62.122` |
+| air (M1 MacBook Air, Asahi) | `pi` | `air` | `192.168.0.108` | `air-remote` | `100.117.139.53` |
+
+The login user differs per host - pi4 predates the convention and uses
+`domengabrovsek` where the others use `pi`. The aliases encode this, so `ssh pi4`
+works without remembering it.
 
 The aliases share one key, `~/.ssh/id_rpi5`, which is **not** in
 this repo (it is a private key). Running `git/install.sh` installs the config
@@ -110,7 +116,9 @@ brew install --cask tailscale && open -a Tailscale   # then log in via the menu-
 #    or headless: brew install tailscale && sudo tailscale up
 
 # 3. Generate a fresh key. The -C comment identifies THIS machine (use for revoke).
-ssh-keygen -t ed25519 -C "id_rpi5_$(scutil --get ComputerName | tr ' ' '-')" \
+#    LocalHostName, not ComputerName: ComputerName can hold spaces, apostrophes,
+#    and emoji, which produce an unreadable authorized_keys comment.
+ssh-keygen -t ed25519 -C "id_rpi5_$(scutil --get LocalHostName)" \
   -f ~/.ssh/id_rpi5
 ssh-add --apple-use-keychain ~/.ssh/id_rpi5   # or just re-run ./install.sh
 
@@ -147,8 +155,10 @@ changes, the Pis already do key auth.
 ```bash
 ssh pi5           # LAN       (192.168.0.2, user pi)
 ssh pi4           # LAN       (192.168.0.3, user domengabrovsek)
+ssh air           # LAN       (192.168.0.108, user pi)
 ssh pi5-remote    # Tailscale (100.x, works off-network)
 ssh pi4-remote
+ssh air-remote
 ```
 
 If LAN works but `-remote` hangs, the new machine isn't on the tailnet (re-check
@@ -159,6 +169,27 @@ step 2). If both hang, the pubkey didn't land in the Pi's `authorized_keys`.
 Revoke its key so a decommissioned laptop can't get back in - on **each Pi**,
 delete the old machine's line from `~/.ssh/authorized_keys` (find it by its `-C`
 comment). If both laptops stay in service, leave both pubkeys in place.
+
+Audit what is currently authorized across the homelab from the Mac:
+
+```bash
+for h in pi5 pi4 air; do
+  echo "### $h"
+  ssh "$h" 'ssh-keygen -lf ~/.ssh/authorized_keys'
+done
+```
+
+Every line should map to a machine still in service. To check whether a key is
+actually in use before removing it, look at what has logged in recently - a key
+with no logins is safe to drop, one with hundreds is load-bearing:
+
+```bash
+ssh pi5 'sudo journalctl -u ssh --since "30 days ago" --no-pager \
+  | awk "/Accepted publickey/ {print \$(NF-5), \$NF}" | sort | uniq -c | sort -rn'
+```
+
+That prints `count  source-ip  fingerprint`, which also identifies *which*
+machine a mystery key belongs to.
 
 ### Alternative: reuse the existing key
 
@@ -176,6 +207,62 @@ On the new machine, load it (or just re-run `./install.sh`, which now does this)
 chmod 600 ~/.ssh/id_rpi5
 ssh-add --apple-use-keychain ~/.ssh/id_rpi5
 ```
+
+### GitHub keys on the homelab hosts
+
+Two different directions of access are easy to confuse, so keep them apart:
+
+- **Mac -> host** is `id_rpi5`, generated on the Mac, authorized in each host's
+  `authorized_keys`. Covered above.
+- **Host -> GitHub** is a *separate* key that lives only on that host, so the
+  Pis can `git pull` and `git push` their own clones. Covered here.
+
+Each host keeps its own GitHub key at `~/.ssh/id_github_<hostname>`, and every
+one of them is registered on the same `domengabrovsek` GitHub account:
+
+| Host | Key file | Fingerprint |
+|---|---|---|
+| pi5 | `~/.ssh/id_github_rpi5` | `SHA256:7NBRZFhlU7Me8iHFXkH8tvwMnSWl/NKxhylMRcd9GEw` |
+| pi4 | `~/.ssh/id_github_rpi4` | `SHA256:HErq5lFm6mP4eyXiHz1j0j2+OIgGmH+4ZvMbNle2624` |
+| air | `~/.ssh/id_github_air` | `SHA256:Zl6UHPiDzYDkRSnTyHASx/z4Kk/CHKN/pwJXx/XVLB4` |
+
+The `id_github_<hostname>` name is the convention - one key per host means a
+compromised or retired host is revoked by deleting a single key at
+<https://github.com/settings/keys>, without touching the others. The `-C`
+comment is the account email on all of them, because the filename already
+carries the host.
+
+These hosts run Linux and do not Include this repo's `ssh.config` (it is
+macOS-flavoured: `UseKeychain`, the Pi host aliases). Each keeps a small
+hand-written `~/.ssh/config`. That is the fragile part - a typo there is only
+discovered the next time a push fails - so set it up by copy-paste:
+
+```bash
+# On the host itself. Replace <hostname> with pi5 / pi4 / air.
+ssh-keygen -t ed25519 -C "domen@domengabrovsek.com" -f ~/.ssh/id_github_<hostname>
+cat >> ~/.ssh/config <<'EOF'
+Host github.com
+    HostName github.com
+    User git
+    IdentityFile ~/.ssh/id_github_<hostname>
+    IdentitiesOnly yes
+EOF
+chmod 600 ~/.ssh/config
+cat ~/.ssh/id_github_<hostname>.pub   # add this at github.com/settings/keys
+ssh -T git@github.com                 # expect: Hi domengabrovsek
+```
+
+To audit every host at once from the Mac:
+
+```bash
+for h in pi5 pi4 air; do
+  printf '%-5s ' "$h"
+  ssh "$h" 'ssh -o BatchMode=yes -T git@github.com 2>&1 | head -1'
+done
+```
+
+A `no such identity` line in that output means the host's `~/.ssh/config`
+points at a filename that does not exist - compare it against the table above.
 
 ## Adding another client
 
