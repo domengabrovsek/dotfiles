@@ -129,7 +129,7 @@ Tailscale IP:
 |---|---|---|---|---|---|
 | pi5 (Raspberry Pi 5) | `pi` | `pi5` | `192.168.0.2` | `pi5-remote` | `100.108.45.53` |
 | pi4 (Raspberry Pi 4) | `domengabrovsek` | `pi4` | `192.168.0.3` | `pi4-remote` | `100.108.62.122` |
-| air (M1 MacBook Air, Asahi) | `pi` | `air` | `192.168.0.108` | `air-remote` | `100.117.139.53` |
+| air (M1 MacBook Air, Asahi) | `pi` | `air` | `192.168.0.7` | `air-remote` | `100.117.139.53` |
 
 The login user differs per host - pi4 predates the convention and uses
 `domengabrovsek` where the others use `pi`. The aliases encode this, so `ssh pi4`
@@ -199,7 +199,7 @@ changes, the Pis already do key auth.
 ```bash
 ssh pi5           # LAN       (192.168.0.2, user pi)
 ssh pi4           # LAN       (192.168.0.3, user domengabrovsek)
-ssh air           # LAN       (192.168.0.108, user pi)
+ssh air           # LAN       (192.168.0.7, user pi)
 ssh pi5-remote    # Tailscale (100.x, works off-network)
 ssh pi4-remote
 ssh air-remote
