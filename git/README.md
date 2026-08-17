@@ -1,13 +1,15 @@
 # Git Identities (personal + pentla)
 
-Per-context git identity and SSH keys on one machine. Personal is the default;
-work repos under `~/dev/work/pentla/` commit as Pentla and push with a separate
-key. Structure extends to more clients by copying the pentla pieces.
+Per-context git identity on one machine. Personal is the default; work repos
+under `~/dev/work/pentla/` commit as Pentla. Both push with the same SSH key,
+because the personal GitHub account also holds access to the Pentla-tech org,
+so only the commit email differs. Structure extends to more clients by copying
+the pentla pieces.
 
 ## Device inventory
 
 Every key in the setup, and which machine holds it. A key not in this table is
-not supposed to exist - that is the point of the table. Verified 2026-08-08.
+not supposed to exist - that is the point of the table. Verified 2026-08-17.
 
 | Device | Kind | Reaches homelab? | Key -> GitHub | Key -> homelab |
 |---|---|---|---|---|
@@ -17,10 +19,12 @@ not supposed to exist - that is the point of the table. Verified 2026-08-08.
 | pi4 | Raspberry Pi 4, Debian | n/a (is a host) | `id_github_rpi4` `SHA256:HErq5lFm6mP4eyXiHz1j0j2+OIgGmH+4ZvMbNle2624` | n/a |
 | air | M1 MacBook Air, Asahi Linux | n/a (is a host) | `id_github_air` `SHA256:Zl6UHPiDzYDkRSnTyHASx/z4Kk/CHKN/pwJXx/XVLB4` | n/a |
 
-The MacBook Pro also holds `id_pentla`
-(`SHA256:aQwBjrl2EG3ep7rinNMJQEtHclrX3CZ0WIIHtIaUUfw`) for the Pentla GitHub
-identity. It is not on the personal account's key list, so it does not appear in
-`https://github.com/domengabrovsek.keys`.
+The MacBook Pro may still hold a stale `id_pentla`
+(`SHA256:aQwBjrl2EG3ep7rinNMJQEtHclrX3CZ0WIIHtIaUUfw`) from the retired two-key
+setup. It was never registered on any GitHub account, which is why it does not
+appear in `https://github.com/domengabrovsek.keys` and why SSH to Pentla-tech
+failed with `Permission denied (publickey)` for as long as the org was routed
+through it. Nothing references it now; delete the keypair when convenient.
 
 ### Access policy
 
@@ -36,7 +40,7 @@ identity. It is not on the personal account's key list, so it does not appear in
 ### Expected state, and how to check it
 
 ```bash
-# 3 keys in the Mac's agent: id_personal, id_pentla, id_rpi5
+# 2 keys in the Mac's agent: id_personal, id_rpi5
 ssh-add -l
 
 # exactly 1 authorized key per host, all three the same fingerprint
@@ -69,14 +73,13 @@ gh repo clone domengabrovsek/dotfiles ~/dev/personal/dotfiles
 cd ~/dev/personal/dotfiles/git && ./install.sh
 ```
 
-The script prints two **public** keys. Add each to GitHub at
-<https://github.com/settings/keys> (both on the same account if that account is
-your Pentla-tech org member), then:
+The script prints one **public** key. Add it to GitHub at
+<https://github.com/settings/keys> on the account that is a Pentla-tech org
+member, then:
 
 ```bash
-# 5. Verify SSH auth for both identities
+# 5. Verify SSH auth
 ssh -T git@github.com        # expect: Hi domengabrovsek
-ssh -T git@github-pentla     # expect: Hi <pentla user>
 
 # 6. Switch this dotfiles repo to SSH so future pulls use id_personal
 git -C ~/dev/personal/dotfiles remote set-url origin git@github.com:domengabrovsek/dotfiles.git
@@ -91,23 +94,24 @@ to be done by hand first.
 
 ### What install.sh does
 
-1. Generates `~/.ssh/id_personal` and `~/.ssh/id_pentla` (ed25519) if missing
+1. Generates `~/.ssh/id_personal` (ed25519) if missing
 2. Adds an `Include` for `ssh.config` to the top of `~/.ssh/config`
-3. Loads both keys into the agent + macOS keychain
+3. Loads the key into the agent + macOS keychain
 4. Symlinks `~/.gitconfig` -> `gitconfig` and `~/.gitconfig-pentla` -> `gitconfig-pentla`
-5. Prints both public keys to register on GitHub
+5. Prints the public key to register on GitHub
 
 ## How it works
 
 | Context | Folder | Email | Key | Host alias |
 |---|---|---|---|---|
 | Personal (default) | anywhere outside `work/pentla/` | `domen@domengabrovsek.com` | `id_personal` | `github.com` |
-| Pentla | `~/dev/work/pentla/` | `domen@pentla.tech` | `id_pentla` | `github-pentla` |
+| Pentla | `~/dev/work/pentla/` | `domen@pentla.tech` | `id_personal` | `github.com` |
 
 - **Identity** switches by directory (`includeIf "gitdir:~/dev/work/pentla/"`).
-- **SSH key** switches by a URL rewrite that maps the whole `Pentla-tech` org to
-  the `github-pentla` alias, so cloning a Pentla-tech repo picks `id_pentla`
-  regardless of the directory you run `git clone` from.
+- **SSH key** does not switch. One key serves both contexts, because the
+  `domengabrovsek` account is a Pentla-tech org member and already has push
+  access to the org's repos. A second key would have to be registered on a
+  second GitHub account to buy anything, and there is no such account.
 
 Clone into the folder that matches the identity:
 
@@ -306,15 +310,26 @@ points at a filename that does not exist - compare it against the table above.
 
 ## Adding another client
 
+If the client's repos are reachable from the `domengabrovsek` account (the
+usual case: they add you to their org), only the commit email has to change:
+
+1. Add a `gitconfig-<client>` file with the client name/email
+2. In `gitconfig`, add an `includeIf "gitdir:~/dev/work/<client>/"` pointing at it
+3. Symlink it in `install.sh` next to `gitconfig-pentla`
+
+Only if the client requires a **separate GitHub account** do you need a second
+key, and then all of the following, because a key can be registered on exactly
+one account:
+
 1. `ssh-keygen -t ed25519 -C "<client email>" -f ~/.ssh/id_<client>`
 2. Add a `Host github-<client>` block to `ssh.config` pointing at that key
-3. Add a `gitconfig-<client>` file with the client name/email
-4. In `gitconfig`, add an `includeIf "gitdir:~/dev/work/<client>/"` and a `url`
-   rewrite for that client's org
+3. In `gitconfig`, add a `url` rewrite mapping that client's org onto the alias
+4. Register the pubkey on the client account before pushing anything, or every
+   SSH operation against that org fails with `Permission denied (publickey)`
 
 ## Not carried over from the old machine
 
 The old `~/.gitconfig` had a GitLab personal access token embedded in a
 `url.insteadOf` rewrite (plaintext). It is intentionally excluded here. Revoke
 that token in GitLab and, if GitLab is needed again, add an SSH key + host alias
-the same way as pentla.
+following the separate-account flow in "Adding another client" above.

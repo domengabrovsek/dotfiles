@@ -7,6 +7,10 @@ set -euo pipefail
 # Usage: git clone <dotfiles> && cd dotfiles/git && ./install.sh
 # Idempotent - safe to re-run. Generates keys locally; nothing secret is
 # ever written back into the repo.
+#
+# One GitHub key covers both contexts. The personal account has access to the
+# Pentla-tech org, so work repos need no key of their own; only the commit
+# email differs, and gitconfig switches that by directory.
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 SSH_DIR="$HOME/.ssh"
@@ -15,9 +19,7 @@ INCLUDE_LINE="Include $SCRIPT_DIR/ssh.config"
 
 # key file -> commit email used as the key comment
 PERSONAL_KEY="$SSH_DIR/id_personal"
-PENTLA_KEY="$SSH_DIR/id_pentla"
 PERSONAL_EMAIL="domen@domengabrovsek.com"
-PENTLA_EMAIL="domen@pentla.tech"
 
 echo "Setting up git identities from: $SCRIPT_DIR"
 echo ""
@@ -31,7 +33,7 @@ chmod 700 "$SSH_DIR"
 echo "[ok] ~/.ssh (700)"
 
 # ============================================================================
-# 2. Generate ed25519 keys (one per context)
+# 2. Generate the ed25519 GitHub key
 # ============================================================================
 
 gen_key() {
@@ -47,7 +49,6 @@ gen_key() {
 }
 
 gen_key "$PERSONAL_KEY" "$PERSONAL_EMAIL"
-gen_key "$PENTLA_KEY" "$PENTLA_EMAIL"
 
 # ============================================================================
 # 3. Wire ssh.config into ~/.ssh/config via an Include at the very top
@@ -69,11 +70,11 @@ else
 fi
 
 # ============================================================================
-# 4. Load keys into the agent + macOS keychain
+# 4. Load the key into the agent + macOS keychain
 # ============================================================================
 
-if ssh-add --apple-use-keychain "$PERSONAL_KEY" "$PENTLA_KEY" 2>/dev/null; then
-  echo "[ok] keys added to agent + keychain"
+if ssh-add --apple-use-keychain "$PERSONAL_KEY" 2>/dev/null; then
+  echo "[ok] key added to agent + keychain"
 else
   echo "[warn] could not add keys to agent (is ssh-agent running?)"
 fi
@@ -110,31 +111,26 @@ link "$SCRIPT_DIR/gitconfig" "$HOME/.gitconfig"
 link "$SCRIPT_DIR/gitconfig-pentla" "$HOME/.gitconfig-pentla"
 
 # ============================================================================
-# 6. Public keys to register on GitHub
+# 6. Public key to register on GitHub
 # ============================================================================
 
 echo ""
 echo "============================================================"
-echo "Add each PUBLIC key to the matching GitHub account:"
+echo "Add this PUBLIC key to the GitHub account:"
 echo "  https://github.com/settings/keys"
 echo "============================================================"
 echo ""
-echo "--- PERSONAL (github.com / domengabrovsek) ---"
+echo "--- github.com / domengabrovsek (personal + Pentla-tech) ---"
 cat "$PERSONAL_KEY.pub"
-echo ""
-echo "--- PENTLA (github.com / Pentla-tech account) ---"
-cat "$PENTLA_KEY.pub"
 echo ""
 
 if command -v pbcopy >/dev/null 2>&1; then
   echo "Tip: pbcopy < ~/.ssh/id_personal.pub   (then paste into GitHub)"
-  echo "     pbcopy < ~/.ssh/id_pentla.pub"
   echo ""
 fi
 
-echo "After adding the keys, verify with:"
+echo "After adding the key, verify with:"
 echo "  ssh -T git@github.com        # expect: Hi domengabrovsek"
-echo "  ssh -T git@github-pentla     # expect: Hi <your pentla user>"
 echo ""
 echo "Then clone into the right folder, e.g.:"
 echo "  git clone git@github.com:domengabrovsek/personal-api.git  ~/dev/personal/personal-api"
