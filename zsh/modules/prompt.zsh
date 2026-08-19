@@ -1,18 +1,36 @@
 # ============================================================================
 # Prompt Configuration
 # ============================================================================
-# Custom prompt with git info and Node.js version
+# Custom prompt with git info and Node.js / npm versions
 
 # ============================================================================
-# Cached Node.js Version (avoids subprocess on every prompt render)
+# Cached Node.js / npm Versions (avoids subprocess on every prompt render)
 # ============================================================================
 
 _cached_node_version=""
+_cached_npm_version=""
 _cached_node_bin_path=""
 _prompt_last_path=""
 
+# npm ships its version in its own package.json, so reading that file beats
+# running `npm -v`, which pays a full Node startup on every version switch.
+_npm_version_from_prefix() {
+  local pkg="$1/lib/node_modules/npm/package.json" line
+  [[ -r "$pkg" ]] || return 1
+  while IFS= read -r line; do
+    if [[ "$line" == *'"version"'* ]]; then
+      line="${line#*\"version\"}"
+      line="${line#*:}"
+      line="${line#*\"}"
+      echo "${line%%\"*}"
+      return 0
+    fi
+  done < "$pkg"
+  return 1
+}
+
 _update_node_version_cache() {
-  local node_bin
+  local node_bin npm_bin
   # whence -p bypasses shell functions (e.g. nvm lazy wrappers) and finds the binary in PATH
   node_bin="$(whence -p node 2>/dev/null)"
 
@@ -29,11 +47,26 @@ _update_node_version_cache() {
   else
     _cached_node_version=""
   fi
+
+  # npm bundled with this Node sits under the same prefix as bin/node; fall back
+  # to whatever npm PATH resolves to when the layout differs (Homebrew, Volta).
+  _cached_npm_version=""
+  if [[ -n "$node_bin" ]]; then
+    _cached_npm_version="$(_npm_version_from_prefix "${node_bin%/bin/node}")"
+  fi
+  if [[ -z "$_cached_npm_version" ]]; then
+    npm_bin="$(whence -p npm 2>/dev/null)"
+    [[ -n "$npm_bin" ]] && _cached_npm_version="$("$npm_bin" -v 2>/dev/null)"
+  fi
 }
 
 function node_version() {
   if [[ -n "$_cached_node_version" ]]; then
-    echo " $(prompt_sep) %F{yellow}⬢ ${_cached_node_version}%f"
+    if [[ -n "$_cached_npm_version" ]]; then
+      echo " $(prompt_sep) %F{yellow}⬢ ${_cached_node_version} (${_cached_npm_version})%f"
+    else
+      echo " $(prompt_sep) %F{yellow}⬢ ${_cached_node_version}%f"
+    fi
   fi
 }
 
@@ -131,7 +164,7 @@ function git_segment() {
   fi
 }
 
-# 💻 hostname · 📁 parent/current · ±(branch) · ☁︎ aws · ☁︎ gcp · ⬢ node →
+# 💻 hostname · 📁 parent/current · ±(branch) · ☁︎ aws · ☁︎ gcp · ⬢ node (npm) →
 # Every section carries a glyph, so the eye can find one without reading any of
 # the others. Every segment past the directory supplies its own leading
 # separator, so a dot only ever appears between two segments that are present.
