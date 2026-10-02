@@ -139,7 +139,7 @@ NVM_VERSION="v0.40.6"
 # Pinned to an exact patch, not a major or lts/*. A major-only default alias
 # resolves against whatever happens to be installed locally, which drifted the
 # four machines onto four different versions of Node 24.
-NODE_VERSION="24.18.0"
+NODE_VERSION="24.21.0"
 export NVM_DIR="$HOME/.nvm"
 
 if [ ! -s "$NVM_DIR/nvm.sh" ]; then

@@ -113,8 +113,8 @@ This means any edit you make in `~/.zsh/` directly modifies the repo - you can `
 ```
 
 ```
-💻 server · 📁 repos · ⬢ v24.18.0 →
-💻 domen-mbp · 📁 dotfiles · ±(main) · ☁︎ my-project (me@example.com) · ⬢ v24.18.0 →
+💻 server · 📁 repos · ⬢ v24.21.0 →
+💻 domen-mbp · 📁 dotfiles · ±(main) · ☁︎ my-project (me@example.com) · ⬢ v24.21.0 →
 ```
 
 Every section carries a glyph, so you can find one without reading the others.
