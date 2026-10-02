@@ -87,8 +87,10 @@ setopt PUSHD_SILENT
 # Globbing
 # ============================================================================
 
-# Extended globbing (allows more complex pattern matching)
-setopt EXTENDED_GLOB
+# EXTENDED_GLOB stays off: nvm is POSIX sh and runs with this shell's options,
+# so `#` as a glob operator breaks its alias lookup ("bad pattern: #*") and
+# `nvm use default` fails, which also stops the switch back after leaving a
+# .nvmrc project.
 # Case insensitive globbing
 setopt NO_CASE_GLOB
 # Numeric glob sort
