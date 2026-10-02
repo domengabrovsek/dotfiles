@@ -1,0 +1,25 @@
+# Template for aws/config.local, which is gitignored. install.sh symlinks
+# ~/.aws/config to config.local. No secrets: only the SSO session and
+# account/role mapping. Credentials are short-lived and fetched on demand via
+# `aws sso login --sso-session personal` (see zsh/README.md).
+
+[sso-session personal]
+sso_start_url = https://<your-org>.awsapps.com/start
+sso_region = eu-central-1
+sso_registration_scopes = sso:account:access
+
+# AdministratorAccess (1h sessions) - use only when a change actually needs it.
+[profile personal]
+sso_session = personal
+sso_account_id = <account-id>
+sso_role_name = AdministratorAccess
+region = eu-central-1
+output = json
+
+# ReadOnlyAccess (12h sessions) - the day-to-day default for routine, read-only work.
+[profile personal-readonly]
+sso_session = personal
+sso_account_id = <account-id>
+sso_role_name = ReadOnlyAccess
+region = eu-central-1
+output = json

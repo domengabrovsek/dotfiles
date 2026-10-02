@@ -1,0 +1,18 @@
+# Managed by dotfiles/git. Symlinked to ~/.gitconfig.
+# Personal is the default identity; work contexts override per-directory below.
+
+[user]
+	name = Domen Gabrovsek
+	email = domen@domengabrovsek.com
+
+[core]
+	editor = code --wait
+
+[filter "lfs"]
+	smudge = git-lfs smudge -- %f
+	process = git-lfs filter-process
+	required = true
+	clean = git-lfs clean -- %f
+
+[include]
+	path = ~/.gitconfig.local
