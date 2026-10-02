@@ -194,8 +194,8 @@ once with `gcloud auth login <account>`.
 
 | Command | Action |
 |---|---|
-| `gcpp [name]` | Switch gcloud configuration (numbered list without a name) |
-| `gcpa [account]` | Switch the account on the active configuration |
+| `gcpp [name]` | Pick a gcloud configuration with fzf; an exact name switches directly, other text pre-fills the picker |
+| `gcpa [account]` | Same for the account on the active configuration |
 | `gcpc` | Show configuration, account, project, and region |
 
 ## Common Commands

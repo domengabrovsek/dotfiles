@@ -26,143 +26,59 @@ alias gcpa='gcp_account'  # Switch account on the active profile
 
 # --- Configuration and account switchers ---
 
-# Switch GCP configuration with interactive selection
+# Switch gcloud configuration via fzf. An exact name switches directly; other
+# text pre-fills the picker, like awsp.
 gcp_switch() {
-  local configs=()
-  local active_config
+  command -v gcloud >/dev/null 2>&1 || { echo "❌ gcloud required."; return 1; }
 
-  # Get list of configurations
-  while IFS= read -r line; do
-    if [[ -n "$line" ]]; then
-      configs+=("$line")
-    fi
-  done < <(gcloud config configurations list --format="value(name)" 2>/dev/null)
-
-  active_config=$(gcloud config configurations list --filter="IS_ACTIVE=true" --format="value(name)" 2>/dev/null)
-
-  # If no argument provided, show interactive selection
-  if [[ -z "$1" ]]; then
-    if [[ ${#configs[@]} -eq 0 ]]; then
-      echo "No GCP configurations found."
-      echo ""
-      echo "Create one with: gcloud config configurations create <name>"
-      return 1
-    fi
-
-    echo "GCP Configurations:"
-    echo ""
-
-    if [[ -n "$active_config" ]]; then
-      local active_project=$(gcloud config get-value project 2>/dev/null)
-      echo "   Current: \x1b[32m${active_config}\x1b[0m (project: ${active_project:-none})"
-    fi
-    echo ""
-
-    # List all configs with numbers
-    local i=1
-    for config in "${configs[@]}"; do
-      local project=$(gcloud config configurations describe "$config" --format="value(properties.core.project)" 2>/dev/null)
-      if [[ "$config" == "$active_config" ]]; then
-        printf "   \x1b[32m%2d) %s (project: %s) ✓\x1b[0m\n" $i "$config" "${project:-none}"
-      else
-        printf "   %2d) %s (project: %s)\n" $i "$config" "${project:-none}"
-      fi
-      ((i++))
-    done
-
-    echo ""
-    echo -n "Select configuration number (or press Enter to cancel): "
-    read selection
-
-    # Handle selection
-    if [[ -z "$selection" ]]; then
-      echo "Cancelled."
-      return 0
-    elif [[ "$selection" =~ ^[0-9]+$ ]] && [[ $selection -ge 1 ]] && [[ $selection -le ${#configs[@]} ]]; then
-      local selected="${configs[$selection]}"
-      gcloud config configurations activate "$selected" 2>/dev/null
-      _update_gcp_config_cache
-      echo ""
-      echo "Switched to GCP configuration: $selected"
-      gcp_current
-    else
-      echo "Invalid selection: $selection"
-      return 1
-    fi
+  local selected
+  if [[ -n "$1" ]] && gcloud config configurations list --format="value(name)" 2>/dev/null | grep -qx -- "$1"; then
+    selected="$1"
   else
-    # Direct config switch
-    if gcloud config configurations activate "$1" 2>/dev/null; then
-      _update_gcp_config_cache
-      echo "Switched to GCP configuration: $1"
-      gcp_current
-    else
-      echo "Configuration '$1' not found."
-      echo ""
-      echo "Available configurations:"
-      gcloud config configurations list --format="table(name, is_active, properties.core.project, properties.core.account)" 2>/dev/null
-      return 1
-    fi
+    command -v fzf >/dev/null 2>&1 || { echo "❌ fzf required for selection."; return 1; }
+    selected=$(gcloud config configurations list \
+        --format="table[no-heading](name, properties.core.project, properties.core.account)" 2>/dev/null \
+      | fzf --height 40% --reverse --query "$1" --prompt "gcloud config> " \
+          --header "current: ${_cached_gcp_config:-none}") || return
+    selected="${selected%% *}"
   fi
+  [[ -z "$selected" ]] && return
+
+  gcloud config configurations activate "$selected" >/dev/null 2>&1 || { echo "❌ could not activate $selected"; return 1; }
+  _update_gcp_config_cache
+  echo "Switched to GCP configuration: $selected"
+  gcp_current
 }
 
-# Switch the active configuration's account with interactive selection
+# Switch the active configuration's account via fzf, same rules as gcp_switch.
 gcp_account() {
-  local accounts=()
-  local active_account
+  command -v gcloud >/dev/null 2>&1 || { echo "❌ gcloud required."; return 1; }
 
-  while IFS= read -r line; do
-    if [[ -n "$line" ]]; then
-      accounts+=("$line")
-    fi
-  done < <(gcloud auth list --format="value(account)" 2>/dev/null)
-
-  active_account=$(gcloud config get-value account 2>/dev/null)
-
-  local selected="$1"
-  if [[ -z "$selected" ]]; then
-    if [[ ${#accounts[@]} -eq 0 ]]; then
-      echo "No GCP accounts found."
-      echo ""
-      echo "Log in with: gcloud auth login <account>"
-      return 1
-    fi
-
-    echo "GCP Accounts:"
+  local accounts selected
+  accounts=$(gcloud auth list --format="value(account)" 2>/dev/null)
+  if [[ -z "$accounts" ]]; then
+    echo "No GCP accounts found."
     echo ""
-
-    local i=1
-    for account in "${accounts[@]}"; do
-      if [[ "$account" == "$active_account" ]]; then
-        printf "   \x1b[32m%2d) %s ✓\x1b[0m\n" $i "$account"
-      else
-        printf "   %2d) %s\n" $i "$account"
-      fi
-      ((i++))
-    done
-
-    echo ""
-    echo -n "Select account number (or press Enter to cancel): "
-    read selection
-
-    if [[ -z "$selection" ]]; then
-      echo "Cancelled."
-      return 0
-    elif [[ "$selection" =~ ^[0-9]+$ ]] && [[ $selection -ge 1 ]] && [[ $selection -le ${#accounts[@]} ]]; then
-      selected="${accounts[$selection]}"
-    else
-      echo "Invalid selection: $selection"
-      return 1
-    fi
-  elif (( ! ${accounts[(Ie)$selected]} )); then
-    echo "Account '$selected' is not logged in."
-    echo ""
-    echo "Log in with: gcloud auth login $selected"
+    echo "Log in with: gcloud auth login <account>"
     return 1
   fi
 
+  if [[ -n "$1" ]] && print -r -- "$accounts" | grep -qx -- "$1"; then
+    selected="$1"
+  elif [[ "$1" == *@* ]] && ! print -r -- "$accounts" | grep -qiF -- "$1"; then
+    echo "Account '$1' is not logged in."
+    echo ""
+    echo "Log in with: gcloud auth login $1"
+    return 1
+  else
+    command -v fzf >/dev/null 2>&1 || { echo "❌ fzf required for selection."; return 1; }
+    selected=$(print -r -- "$accounts" | fzf --height 40% --reverse --query "$1" \
+        --prompt "gcloud account> " --header "current: ${_cached_gcp_account:-none}") || return
+  fi
+  [[ -z "$selected" ]] && return
+
   gcloud config set account "$selected" --quiet 2>/dev/null
   _update_gcp_config_cache
-  echo ""
   echo "Switched to GCP account: $selected"
   gcp_current
 }
@@ -185,9 +101,9 @@ _zhelp_register gcp <<'HELP'
 gcp-projects  gcloud projects list
 gcpp / gcpc   switch profile / show current
 gcpa          switch account on the active profile
-gcp_switch    interactive profile switcher
+gcp_switch    fzf configuration switcher
 gcp_current   show current profile + identity
-gcp_account   interactive account switcher
+gcp_account   fzf account switcher
 gcp-set-project <id>  gcloud config set project
 gcp-login     application-default login
 HELP
