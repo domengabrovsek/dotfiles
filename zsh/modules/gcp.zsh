@@ -368,7 +368,7 @@ GCP Debug Commands:
 
 Notes:
   - <name> can be a full service name or a UUID (auto-resolved)
-  - [region] defaults to $GCP_DEFAULT_REGION (currently: europe-west1)
+  - [region] defaults to $GCP_DEFAULT_REGION (europe-west1 unless you set it)
   - Override default region: export GCP_DEFAULT_REGION=us-central1
 HELP
 }
