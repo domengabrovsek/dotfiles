@@ -6,7 +6,7 @@ Modular zsh configuration. Symlink-based: `~/.zsh` -> this repo, `~/.zshrc` -> `
 
 ## Structure
 
-- `.zshrc` - Main entry point. Loads Oh My Zsh, then sources all `modules/*.zsh` files via a loop. Ends with `~/.zshrc.local` overrides.
+- `.zshrc` - Main entry point. Loads Oh My Zsh, then the modules from an explicit, ordered list, then `~/.zshrc.local` overrides, then prints the startup time and the welcome banner. Load order and design reasons: [ARCHITECTURE.md](ARCHITECTURE.md).
 - `modules/environment.zsh` - Env vars, history config, zoxide init, fzf setup, autosuggestion config, key bindings.
 - `modules/git.zsh`, `docker.zsh`, `k8s.zsh`, `terraform.zsh`, `node.zsh`, `aws.zsh`, `gcp.zsh` - One domain each: aliases, functions, env, completion, and help entries.
 - `modules/files.zsh` - Navigation, `ls`/`cat` (eza/bat if installed, standard tools otherwise), safe `cp`/`mv`/`rm`, file functions.
@@ -43,5 +43,5 @@ Modular zsh configuration. Symlink-based: `~/.zsh` -> this repo, `~/.zshrc` -> `
 - `fd()` was renamed to `fdir()` to avoid shadowing `fd-find` (`brew install fd`).
 - Debian/Ubuntu install bat's binary as `batcat`. `files.zsh` checks both spellings; a bare `command -v bat` test silently does nothing on those hosts.
 - Homebrew has no ARM64 Linux bottles, so it must not be used on the aarch64 homelab hosts - `brew install` would build from source. Use apt there.
-- EDITOR is set to `code -w` (not `code --wait`) because `--wait` with spaces causes issues when used in shell aliases.
+- EDITOR is `code -w` when VS Code is installed, otherwise `vim`, otherwise `vi`, so headless hosts get a working editor. `-w` rather than `--wait` because `--wait` with spaces causes issues when used in shell aliases.
 - Cache dir (`~/.zsh/cache/`) is gitignored and created by `install.sh`.

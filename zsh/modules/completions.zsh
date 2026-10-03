@@ -4,7 +4,7 @@
 # Smart autocompletion for various development tools
 
 # Oh My Zsh has already run compinit. Running it again costs ~400ms and drops
-# every completion registered in between, such as gcloud's from environment.zsh.
+# every completion registered in between, such as gcloud's from gcp.zsh.
 
 # ============================================================================
 # Completion Settings

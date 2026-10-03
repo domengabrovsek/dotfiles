@@ -1,182 +1,111 @@
-# Modular Zsh Configuration
+# Zsh Configuration
 
-A clean, modular zsh configuration with modern CLI tools (fzf, eza, bat, zoxide), lazy-loaded NVM, cached completions, and an fzf-powered help system.
+A modular zsh setup on Oh My Zsh, with one module per tool, a prompt that shows
+the host, folder, git branch, cloud account and Node version, and `zhelp` to
+search every command. It runs on macOS and on Debian/Ubuntu.
 
-## Why Use This Over a Default Shell?
-
-**Default shell:**
-```bash
-ls                          # plain file list, no colors, no git info
-cat config.yaml             # raw text, no syntax highlighting
-cd ~/projects/my-app        # you need to remember the exact path
-history | grep docker       # scroll through wall of text
-git add . && git commit -m "msg" && git push   # every single time
-```
-
-**With this config:**
-```bash
-ll                          # colored file list with icons, git status, human-readable sizes
-cat config.yaml             # syntax-highlighted with line numbers (bat)
-z my-app                    # smart jump from anywhere (zoxide remembers your dirs)
-Ctrl+R                      # fuzzy search history instantly (fzf)
-qpush "msg"                 # one command: add, commit, push
-```
-
-**More examples:**
-```bash
-zhelp port                  # forgot a command? fuzzy search all custom commands
-dsh my-container            # shell into a Docker container (tries bash, falls back to sh)
-kctx                        # list k8s contexts, kctx prod to switch
-cr-info my-service          # full Cloud Run summary in one command
-kill_port 3000              # kill whatever is hogging port 3000
-extract archive.tar.gz      # works with any archive format, no flags to remember
-```
-
-You also get **live autosuggestions** as you type (from history + completions), **syntax highlighting** (green = valid command, red = typo), and **tab completion** for kubectl, docker, gcloud, terraform, and more - all cached for fast startup.
+For how it loads and why it is built this way, see
+[ARCHITECTURE.md](ARCHITECTURE.md).
 
 ## Setup
+
+On a machine that already has its GitHub SSH key:
 
 ```bash
 git clone git@github.com:domengabrovsek/dotfiles.git ~/dev/personal/dotfiles
 cd ~/dev/personal/dotfiles/zsh && ./install.sh
 ```
 
-On a machine without an SSH key yet, follow the bootstrap in [git/README.md](../git/README.md) first.
+On a machine without one, follow the bootstrap in
+[git/README.md](../git/README.md) first.
 
-The install script handles everything: Oh My Zsh, plugins, CLI tools (fzf, eza, bat, zoxide), nvm + Node, and symlinks. It's idempotent and safe to re-run.
+`install.sh` is safe to re-run; each step skips what is already in place.
 
-Node is pinned to an exact version by `NODE_VERSION` in `install.sh`, so every machine runs the same toolchain. Bump that one line and re-run the script on each machine to move them all together.
-
-It detects the platform and adapts:
-
-| | macOS | Debian / Ubuntu |
+| Step | macOS | Debian / Ubuntu |
 |---|---|---|
-| CLI tools from | Homebrew | apt |
-| zsh | already present | installed, and set as the login shell |
-| Cloud CLIs (aws, gcloud, session-manager-plugin) | installed, AWS SSO and gcloud accounts seeded | skipped |
+| Package manager | Homebrew, installed if missing | apt; zsh installed if missing |
+| Oh My Zsh and plugins | zsh-autosuggestions, zsh-syntax-highlighting | Same |
+| CLI tools: fzf, eza, bat, zoxide | Homebrew | apt, skipping any the release does not package (Debian 12 has no eza) |
+| nvm and Node | nvm into `~/.nvm`, Node pinned by `NODE_VERSION` | Same |
+| Cloud CLIs: aws, gcloud, session-manager-plugin | Installed; AWS and gcloud configs set up from the `*.local` files | Skipped |
+| Links into `$HOME` | `~/.zsh`, `~/.zshrc`, `~/.zshenv`, `~/.aws/config` | `~/.zsh`, `~/.zshrc`, `~/.zshenv` |
+| Login shell | Already zsh | Changed to zsh, effective at next login |
 
-Homebrew is not used on Linux: it publishes no ARM64 bottles, so every formula would compile from source, and apt carries all four tools. The cloud CLIs are workstation-only, so the homelab hosts don't hold cloud credentials. Every path they set up is guarded in `environment.zsh` and `completions.zsh`, so skipping them leaves a working shell.
+Homebrew is not used on Linux because it has no ARM64 Linux bottles, so every
+formula would compile from source on ARM Linux hosts. The cloud CLIs stay on
+the workstation, so those hosts hold no cloud credentials. The modules only
+source cloud files that exist, so the shell still loads without them.
 
-After install, open a new terminal or run `exec zsh`. On Linux the login shell change takes effect at the next login.
+Node is pinned to one exact version so every machine runs the same toolchain.
+To move them all, change `NODE_VERSION` in `install.sh` and re-run it on each
+machine.
 
-### How It Works (Symlink-Based)
+`~/.zsh` links to this folder, so edits under `~/.zsh` change the repo, and
+`git pull` updates the shell. The link must stay at `~/.zsh`; see
+[ARCHITECTURE.md](ARCHITECTURE.md#decisions-that-are-easy-to-undo-by-accident).
 
-The entire config lives in the git repo. The installer creates two symlinks:
+After install, open a new terminal or run `exec zsh`.
 
-```
-~/.zsh     ->  ~/path/to/dotfiles/zsh    (the repo directory)
-~/.zshrc   ->  ~/.zsh/.zshrc             (the main entry point)
-```
-
-This means any edit you make in `~/.zsh/` directly modifies the repo - you can `git diff` to see changes, commit them, and `git pull` on another machine to sync. No copying files around, no manual syncing. Clone the repo on a new machine, run `install.sh`, and you have the exact same shell setup.
-
-## Directory Structure
-
-```
-~/.zsh/                     # Symlink -> repo
-├── .zshrc                  # Main entry point
-├── install.sh              # Setup script for new machines
-└── modules/                # All configuration modules
-    ├── help.zsh            # zhelp and _zhelp_register
-    ├── environment.zsh     # PATH, editor, history, fzf, zoxide
-    ├── completions.zsh     # Shared completion settings
-    ├── files.zsh           # Navigation, ls/cat, file functions
-    ├── system.zsh          # Network, VS Code, utilities
-    ├── git.zsh             # Git aliases, functions, fzf pickers
-    ├── docker.zsh          # Docker and compose
-    ├── k8s.zsh             # kubectl and helm
-    ├── terraform.zsh       # Terraform
-    ├── gcp.zsh             # gcloud switchers + Cloud Run shortcuts
-    ├── node.zsh            # npm, .nvmrc at startup
-    ├── aws.zsh             # AWS profiles and SSO
-    ├── prompt.zsh          # Custom prompt
-    └── welcome.zsh         # Welcome banner
-```
-
-## Features
-
-- **fzf-powered help** - `zhelp` opens interactive fuzzy search of all commands
-- **Modern CLI tools** - eza (ls), bat (cat), fzf (fuzzy finder), zoxide (smart cd)
-- **Lazy NVM** - Node version manager loads on first use, not at shell start
-- **Cached completions** - kubectl/helm completions cached to files
-- **Autosuggestions** - Fish-style suggestions from history and completions
-- **Syntax highlighting** - Commands colored as you type (green=valid, red=invalid)
-- **GCP Cloud Run tools** - Debug Cloud Run services, images, logs, and revisions
-- **Custom prompt** - Hostname, directory, git branch, AWS profile, node version
-
-## Usage
-
-### Prompt
+## Prompt
 
 ```
-💻 hostname · 📁 current · ±(branch) · ☁︎ aws · ☁︎ gcp · ⬢ node →
+💻 hostname · 📁 folder · ±(branch) · ☁︎ aws · ☁︎ gcp (account) · ⬢ node (npm) →
 ```
 
 ```
-💻 server · 📁 repos · ⬢ v24.21.0 →
-💻 domen-mbp · 📁 dotfiles · ±(main) · ☁︎ my-project (me@example.com) · ⬢ v24.21.0 →
+💻 server · 📁 repos · ⬢ v24.21.0 (11.19.0) →
+💻 domen-mbp · 📁 dotfiles · ±(main) · ☁︎ my-project (me@example.com) · ⬢ v24.21.0 (11.19.0) →
 ```
 
-Every section carries a glyph, so you can find one without reading the others.
+- **Glyphs.** Every section has one, so you can find a section without reading
+  the others.
+- **Dots.** A dot sits between every pair of sections, in a grey used nowhere
+  else, so boundaries stand out. Each segment brings its own dot, so outside a
+  repo, or on a machine with no Node, the segment and its dot disappear
+  together.
+- **Hostname first.** The same config runs on the Mac and the Linux hosts, and
+  they reach each other over SSH, so the prompt says which machine you are on.
+  It uses `%m`, the short hostname. If a machine reports something too long,
+  set `ZSH_PROMPT_HOST=mbp` in `~/.zshrc.local`.
+- **Folder.** Only the current folder (`%1~`).
+- **Branch.** The current git branch, only inside a repo.
+- **Cloud segments.** AWS shows `$AWS_PROFILE` (or `$AWS_DEFAULT_PROFILE`) in
+  orange, only while one is set. GCP shows the active gcloud configuration and
+  its account in blue, and hides itself while the configuration is named
+  `default`. Both use the `☁︎` glyph, so the colour tells them apart.
+- **Node.** The Node version, with npm's in parentheses when found.
 
-A dot sits between every pair of sections. They all share one grey, used by
-nothing else in the prompt, so the boundaries are findable without reading the
-words. Each segment past the directory carries its own leading dot, so a dot
-only ever appears between two segments that are both present - outside a repo,
-or on a machine with no node, the segment and its dot vanish together.
-
-The hostname leads because the same config runs on the Mac and every homelab
-host, and they are all reachable from each other, so the prompt has to say
-which machine you are typing on. It defaults to `%m`, the short hostname,
-already short on the Linux hosts. If a machine reports something too
-long, shorten it in `~/.zshrc.local`:
+## Help
 
 ```bash
-ZSH_PROMPT_HOST=mbp
+zhelp            # fzf search over every command (less without fzf)
+zhelp docker     # filter by keyword
 ```
 
-The directory is `%1~`, only the current folder.
-
-AWS and GCP share the `☁︎` glyph and are told apart by colour - 208 for AWS
-orange, 33 for Google blue - so two cloud segments read as one idea with two
-providers rather than two unrelated things. The GCP segment also shows the
-active account in parentheses.
-
-### Help System
-
-```bash
-zhelp            # Interactive fzf search (or less fallback)
-zhelp docker     # Filter by keyword
-zhelp port       # Search for port-related commands
-zhelp gcp        # Search for GCP-related commands
-```
-
-### Key Bindings (fzf)
+## Key bindings
 
 | Shortcut | Action |
-|----------|--------|
-| `Ctrl+R` | Fuzzy history search |
-| `Ctrl+T` | Fuzzy file finder |
-| `Alt+C` | Fuzzy cd into subdirectory |
+|---|---|
+| `Ctrl+R` | Fuzzy history search (fzf) |
+| `Ctrl+T` | Fuzzy file finder (fzf) |
+| `Alt+C` | Fuzzy cd into a subfolder (fzf) |
+| `→` or `Ctrl+E` | Accept the whole autosuggestion |
+| `Ctrl+→` | Accept one word of it |
+| `Ctrl+U` | Clear it |
 
-### Autosuggestions
+Autosuggestions come from history and completions, fetched asynchronously, for
+input up to 20 characters. The settings are in `modules/environment.zsh`.
 
-| Shortcut | Action |
-|----------|--------|
-| `→` (Right Arrow) | Accept full suggestion |
-| `Ctrl+E` | Accept full suggestion |
-| `Ctrl+→` | Accept one word |
-| `Ctrl+U` | Clear suggestion |
+## Cloud accounts
 
-Suggestions come from history and completions, fetched asynchronously, for
-buffers up to 20 characters. The settings live in `modules/environment.zsh`.
-Override them in `~/.zshrc.local`, for example
-`ZSH_AUTOSUGGEST_STRATEGY=(history)`.
+The cloud commands exist on macOS only, where `install.sh` installs the CLIs.
+Create the two `*.local` files below before running `install.sh`, or run its
+steps by hand afterwards: `ln -sf ~/.zsh/aws/config.local ~/.aws/config` and
+`~/.zsh/gcp/configurations.sh`.
 
-### Cloud Accounts
-
-`install.sh` symlinks `~/.aws/config` to `aws/config.local`, which holds the SSO
-session and profiles. It is gitignored; start it from `aws/config.example`.
+`install.sh` links `~/.aws/config` to `aws/config.local`, which git ignores.
+Start it from `aws/config.example`, which defines the `personal` SSO session,
+then log in with `aws sso login --sso-session personal`.
 
 | Command | Action |
 |---|---|
@@ -188,66 +117,49 @@ session and profiles. It is gitignored; start it from `aws/config.example`.
 `awsp` runs `aws sso login` only when the cached session has expired. The
 profile is per terminal, so two terminals can use two accounts.
 
-`gcp/configurations.sh` seeds the gcloud configurations listed in the gitignored
-`gcp/configurations.local`, one `<name> <account> <project> <region> <zone>` per line. Log in to each account
+`gcp/configurations.sh` creates the gcloud configurations listed in
+`gcp/configurations.local`, which git ignores, one
+`<name> <account> <project> <region> <zone>` per line. Log in to each account
 once with `gcloud auth login <account>`.
 
 | Command | Action |
 |---|---|
 | `gcpp [name]` | Pick a gcloud configuration with fzf; an exact name switches directly, other text pre-fills the picker |
-| `gcpa [account]` | Same for the account on the active configuration |
-| `gcpc` | Show configuration, account, project, and region |
+| `gcpa [account]` | Same, for the account on the active configuration |
+| `gcpc` | Show configuration, account, project and region |
 
-## Common Commands
+Switch with `gcpp` or `gcpa` rather than `gcloud config` directly, so the
+prompt updates.
 
-Run `zhelp` for the full searchable list. Highlights:
+## Common commands
 
-### Git
-`gs` status, `ga`/`gaa` add, `gcm "msg"` commit, `gp` push, `gl` pull, `gco`/`gcb` checkout, `gsw`/`gswc` switch (modern), `grs`/`grss` restore (modern), `glog` log graph, `qpush "msg"` add+commit+push, `fbr` fzf branch switcher, `flog` fzf log browser
+`zhelp` lists them all. A sample:
 
-### Docker
-`d` docker, `dc` compose, `dcup`/`dcupd`/`dcdown` compose up/up -d/down, `dps` ps, `dex` exec, `dsh <ctr>` shell into container, `docker_nuke` full cleanup
-
-### Kubernetes
-`k` kubectl, `kgp`/`kgs`/`kgd` get pods/services/deployments, `kl` logs, `kx` exec, `kctx`/`kns` switch context/namespace
-
-### GCP Cloud Run
-`cr-find` search services, `cr-image` get Docker image, `cr-logs` view logs, `cr-errors` view errors, `cr-info` full summary, `gcp-debug-help` show all GCP commands
-
-### Navigation & Files
-`ll`/`la`/`lt` eza listings, `tree` eza tree, `cat` bat with syntax highlighting, `z <dir>` zoxide smart jump, `mkcd` mkdir+cd, `extract <file>` any archive
-
-### VS Code
-`c.` code ., `cr` code -r . (reuse window), `cdiff` code --diff, `cext` list extensions
-
-### Utilities
-`myip`, `kill_port <p>`, `ports`, `flushdns`, `weather [city]`, `genpass [len]`, `hist_stats`
+| Area | Commands |
+|---|---|
+| Git | `gs`, `gaa`, `gcm "msg"`, `gp`, `gl`, `gsw`/`gswc`, `glog`, `qpush "msg"`, `fbr` (fzf branch switcher), `flog` |
+| Docker | `dc`, `dcup`/`dcupd`/`dcdown`, `dps`, `dsh <ctr>` (shell into a container), `docker_nuke` |
+| Kubernetes | `k`, `kgp`/`kgs`/`kgd`, `kl`, `kx`, `kctx`/`kns` |
+| Cloud Run | `cr-find`, `cr-info`, `cr-logs`, `cr-errors`; `gcp-debug-help` lists the rest |
+| Files | `ll`/`la`/`lt`, `tree` (with eza), `cat` (bat), `z <dir>` (zoxide), `mkcd`, `extract <file>` (tar, tgz, tbz2, gz, bz2, zip, 7z, rar, Z) |
+| Utilities | `myip`, `ports`, `kill_port <p>`, `genpass [len]`, `weather [city]`, `flushdns` (macOS) |
 
 ## Customization
 
-### Machine-Specific Settings
-
-Create `~/.zshrc.local` for settings that shouldn't be in git (API keys, machine-specific paths, etc.). It's auto-loaded if present.
-
-```bash
-export ZSH_USER_NAME="Your Name"    # Customize welcome greeting
-export ZSH_DISABLE_WELCOME=1        # Disable welcome message
-```
-
-### Adding a New Module
-
-Create `modules/<name>.zsh` and add the module name to the loading loop in `.zshrc`.
-
-## Syncing Across Machines
-
-On a new machine:
+`~/.zshrc.local` sits outside the repo, and you create it yourself. It loads
+after the modules, so it can override them. Use it for machine paths and
+personal settings:
 
 ```bash
-git clone git@github.com:domengabrovsek/dotfiles.git ~/dev/personal/dotfiles
-cd ~/dev/personal/dotfiles/zsh && ./install.sh
+export ZSH_PROMPT_HOST=mbp          # shorter hostname in the prompt
+export ZSH_USER_NAME="Your Name"    # name in the welcome banner
+export ZSH_DISABLE_WELCOME=1        # no welcome banner
 ```
 
-To update:
+To add a command or a module, see
+[ARCHITECTURE.md](ARCHITECTURE.md#making-a-change-safely).
+
+## Updating
 
 ```bash
 cd ~/.zsh && git pull && exec zsh
@@ -255,8 +167,12 @@ cd ~/.zsh && git pull && exec zsh
 
 ## Troubleshooting
 
-**Slow startup?** Check with `time zsh -i -c exit`. NVM is lazy-loaded. If still slow, disable unused plugins in `.zshrc`.
-
-**Completions broken?** Run `rm -f ~/.zcompdump && compinit` and `rm ~/.zsh/cache/*.zsh` to regenerate caches.
-
-**Changes not taking effect?** Run `exec zsh` or `source ~/.zshrc`.
+- **Slow startup.** The shell prints its startup time. Compare with
+  `time zsh -i -c exit`, then look for the change that added a subprocess at
+  load time.
+- **Completions broken.** Delete `~/.zcompdump*` and `~/.zsh/cache/*.zsh`, then
+  run `exec zsh`. Oh My Zsh rebuilds the dump, and the shell regenerates the
+  cache files, which git ignores. Don't run `compinit` by hand, because a
+  second run drops every completion registered before it
+  ([ARCHITECTURE.md](ARCHITECTURE.md#decisions-that-are-easy-to-undo-by-accident)).
+- **Change not showing.** Run `exec zsh`.

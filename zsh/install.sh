@@ -169,8 +169,8 @@ fi
 
 # Workstation-only. gcloud and session-manager-plugin ship as casks, which are
 # macOS-only, and the homelab hosts have no reason to hold cloud credentials.
-# environment.zsh and completions.zsh already guard every path this section
-# creates, so skipping it leaves a working shell rather than a broken one.
+# gcp.zsh and aws.zsh already guard every path this section creates, so
+# skipping it leaves a working shell rather than a broken one.
 if [ "$PLATFORM" = "macos" ]; then
   if command -v aws &> /dev/null; then echo "[ok] awscli"; else echo "Installing awscli..."; brew install awscli; fi
   if command -v gcloud &> /dev/null; then echo "[ok] gcloud"; else echo "Installing google-cloud-sdk..."; brew install --cask google-cloud-sdk; fi
