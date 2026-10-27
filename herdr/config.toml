@@ -1,0 +1,43 @@
+onboarding = false
+
+[ui]
+agent_panel_sort = "spaces"
+sidebar_width = 46
+sidebar_max_width = 60
+
+status_indicators = "symbols"
+
+# Agent rows read pane tokens from agent-config's hooks/herdr-pane-context.sh:
+# $repo, $branch, $wt, $model, and one of $c0..$c13 as the repo's color dot.
+# herdr allows at most 16 tokens per row, which caps the palette at 14.
+[ui.sidebar.agents]
+row_gap = 0
+rows = [
+  [
+    { token = "$c0", fg = "#ff5555" },
+    { token = "$c1", fg = "#50fa7b" },
+    { token = "$c2", fg = "#4f8cff" },
+    { token = "$c3", fg = "#f1fa8c" },
+    { token = "$c4", fg = "#bd93f9" },
+    { token = "$c5", fg = "#8be9fd" },
+    { token = "$c6", fg = "#ffb86c" },
+    { token = "$c7", fg = "#ff79c6" },
+    { token = "$c8", fg = "#f8f8f2" },
+    { token = "$c9", fg = "#a6e22e" },
+    { token = "$c10", fg = "#c08552" },
+    { token = "$c11", fg = "#2ec4b6" },
+    { token = "$c12", fg = "#e040fb" },
+    { token = "$c13", fg = "#8a8f98" },
+    "state_icon",
+    { token = "$repo", fg = "#f8f8f2", bold = true },
+  ],
+  ["state_text", { token = "$wt", fg = "#ffb86c" }, { token = "$branch", fg = "#8be9fd" }],
+  [{ token = "terminal_title_stripped", dim = true }, { token = "$model", fg = "#bd93f9" }],
+]
+
+[theme]
+name = "dracula"
+auto_switch = false
+
+[ui.toast]
+delivery = "herdr"

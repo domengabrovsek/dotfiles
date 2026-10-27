@@ -1,12 +1,13 @@
 # Dotfiles
 
-Personal shell and git setup for a Mac and a few Linux hosts. It has two
-independent parts, each with its own installer; use either one alone.
+Personal shell, git, and herdr setup for a Mac and a few Linux hosts. It has
+three independent parts, each with its own installer; use any one alone.
 
 | Part | Sets up | Docs |
 |---|---|---|
 | `zsh/` | Oh My Zsh, one module per tool, the prompt, `zhelp`, CLI tools, nvm with a pinned Node, cloud CLIs on macOS | [zsh/README.md](zsh/README.md), [zsh/ARCHITECTURE.md](zsh/ARCHITECTURE.md) |
 | `git/` | GitHub SSH key and config, git identity with a per-folder work email (macOS) | [git/README.md](git/README.md) |
+| `herdr/` | The herdr sidebar layout: agent rows, repo color dots, sidebar width, theme | Comments in [herdr/config.toml](herdr/config.toml) |
 
 ## How the repo reaches your home folder
 
@@ -22,6 +23,7 @@ machine. A regular file already at a link's path is renamed to
 | `~/.aws/config` | `zsh/aws/config.local`, on macOS once that file exists; re-run the installer after creating it | `zsh/install.sh` |
 | `~/.gitconfig` | `git/gitconfig` | `git/install.sh` |
 | `Include` line in `~/.ssh/config` | `git/ssh.config` | `git/install.sh` |
+| `~/.config/herdr/config.toml` | `herdr/config.toml` | `herdr/install.sh` |
 
 ## What stays out of git
 
@@ -40,6 +42,7 @@ Clone over SSH, then run the installer for each part you want:
 git clone git@github.com:domengabrovsek/dotfiles.git ~/dev/personal/dotfiles
 ~/dev/personal/dotfiles/zsh/install.sh
 ~/dev/personal/dotfiles/git/install.sh
+~/dev/personal/dotfiles/herdr/install.sh
 ```
 
 A machine without a GitHub SSH key cannot clone yet. Read the bootstrap in
