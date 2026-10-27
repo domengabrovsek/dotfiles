@@ -23,30 +23,32 @@ ln -sf "$SCRIPT_DIR/config.toml" "$TARGET"
 echo "[ok] $TARGET -> $SCRIPT_DIR/config.toml"
 
 # herdr keeps the spaces/agents split per client in its state dir, not in
-# config.toml. 0.1 is herdr's minimum, which leaves the most room for agents.
+# config.toml, and only writes that file after a resize. Its name is the FNV-1a
+# hash of the client socket path, so the installer can create it on a fresh
+# machine. 0.1 is herdr's minimum, which leaves the most room for agents.
 SECTION_SPLIT=0.1
 STATE_DIR="${XDG_STATE_HOME:-$HOME/.local/state}/herdr/client-shell"
-shopt -s nullglob
-prefs=("$STATE_DIR"/local-*.json)
-shopt -u nullglob
-if [ ${#prefs[@]} -eq 0 ]; then
-  echo "[skip] sidebar height: start herdr once, then re-run this installer"
-else
-  for pref in "${prefs[@]}"; do
-    python3 - "$pref" "$SECTION_SPLIT" <<'PY'
-import json, os, sys
-path, split = sys.argv[1], float(sys.argv[2])
-with open(path) as handle:
-    prefs = json.load(handle)
-prefs["sidebar_section_split"] = split
-with open(path + ".tmp", "w") as handle:
-    json.dump(prefs, handle, indent=2)
-os.replace(path + ".tmp", path)
+python3 - "$STATE_DIR" "$HERDR_DIR/herdr-client.sock" "$SECTION_SPLIT" <<'PY'
+import glob, json, os, sys
+state_dir, socket_path, split = sys.argv[1], sys.argv[2], float(sys.argv[3])
+digest = 0xcbf29ce484222325
+for byte in socket_path.encode():
+    digest = ((digest ^ byte) * 0x100000001b3) & 0xFFFFFFFFFFFFFFFF
+os.makedirs(state_dir, exist_ok=True)
+paths = set(glob.glob(os.path.join(state_dir, "local-*.json")))
+paths.add(os.path.join(state_dir, f"local-{digest:016x}.json"))
+for path in sorted(paths):
+    prefs = {}
+    if os.path.exists(path):
+        with open(path) as handle:
+            prefs = json.load(handle)
+    prefs["sidebar_section_split"] = split
+    with open(path + ".tmp", "w") as handle:
+        json.dump(prefs, handle, indent=2)
+    os.replace(path + ".tmp", path)
+    print(f"[ok] sidebar height {split} in {path}")
 PY
-    echo "[ok] sidebar height $SECTION_SPLIT in $pref"
-  done
-  echo "     Detach and reattach herdr to apply it; a running window keeps the old height."
-fi
+echo "     Detach and reattach herdr to apply it; a running window keeps the old height."
 
 if command -v herdr &> /dev/null && herdr server reload-config &> /dev/null; then
   echo "[ok] reloaded the running herdr server"
