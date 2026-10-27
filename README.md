@@ -7,7 +7,7 @@ three independent parts, each with its own installer; use any one alone.
 |---|---|---|
 | `zsh/` | Oh My Zsh, one module per tool, the prompt, `zhelp`, CLI tools, nvm with a pinned Node, cloud CLIs on macOS | [zsh/README.md](zsh/README.md), [zsh/ARCHITECTURE.md](zsh/ARCHITECTURE.md) |
 | `git/` | GitHub SSH key and config, git identity with a per-folder work email (macOS) | [git/README.md](git/README.md) |
-| `herdr/` | The herdr sidebar layout: agent rows, repo color dots, sidebar width, theme | Comments in [herdr/config.toml](herdr/config.toml) |
+| `herdr/` | The herdr sidebar layout: agent rows, repo color dots, sidebar width, theme, and the spaces section height in herdr's per-machine state | Comments in [herdr/config.toml](herdr/config.toml) |
 
 ## How the repo reaches your home folder
 
