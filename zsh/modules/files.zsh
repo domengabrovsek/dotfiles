@@ -11,12 +11,12 @@ alias .....='cd ../../../..'
 
 # List directory contents - use eza if available, otherwise standard ls
 if command -v eza &> /dev/null; then
-  alias ls='eza --icons'
-  alias ll='eza -lh --icons --git'
-  alias la='eza -lah --icons --git'
+  alias ls='eza --icons=auto'
+  alias ll='eza -lh --icons=auto --git'
+  alias la='eza -lah --icons=auto --git'
   alias l='eza -F'
-  alias lt='eza -lh --icons --git --sort=modified'
-  alias tree='eza --tree --icons --git-ignore'
+  alias lt='eza -lh --icons=auto --git --sort=modified'
+  alias tree='eza --tree --icons=auto --git-ignore'
 else
   # -G is the colour flag on BSD ls (macOS) but means "hide the group column" on
   # GNU coreutils, so the flag has to be chosen per implementation rather than
