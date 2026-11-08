@@ -53,8 +53,8 @@ After install, open a new terminal or run `exec zsh`.
 ```
 
 ```
-💻 server · 📁 repos · ⬢ v24.21.0 (11.19.0) →
-💻 domen-mbp · 📁 dotfiles · ±(main) · ☁︎ my-project (me@example.com) · ⬢ v24.21.0 (11.19.0) →
+💻 server · 📁 repos · ⬢ v26.13.0 (11.20.0) →
+💻 domen-mbp · 📁 dotfiles · ±(main) · ☁︎ my-project (me@example.com) · ⬢ v26.13.0 (11.20.0) →
 ```
 
 - **Glyphs.** Every section has one, so you can find a section without reading

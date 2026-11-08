@@ -19,7 +19,7 @@ shells. `.zshrc` loads Oh My Zsh, then a fixed list of modules, one per domain.
 they start still need `node`. It resolves `~/.nvm/alias/default` to a version
 directory by path instead of sourcing nvm, so it starts no subprocess. Because
 it cannot resolve a glob alias, the Node pin in `install.sh` must be a plain
-version such as `24.21.0`, never `lts/*`.
+version such as `26.13.0`, never `lts/*`.
 
 ## What `.zshrc` does, in order
 
