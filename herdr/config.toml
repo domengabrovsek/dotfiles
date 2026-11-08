@@ -8,7 +8,8 @@ sidebar_max_width = 60
 status_indicators = "symbols"
 
 # Agent rows read pane tokens from agent-config's hooks/herdr-pane-context.sh:
-# $repo, $branch, $wt, $model, and one of $c0..$c13 as the repo's color dot.
+# $repo, $branch, $wt, and one of $c0..$c13 as the repo's color dot.
+# $focus comes from agent-config's session-focus mod: a Haiku label for the session.
 # herdr allows at most 16 tokens per row, which caps the palette at 14.
 [ui.sidebar.agents]
 row_gap = 0
@@ -32,7 +33,7 @@ rows = [
     { token = "$repo", fg = "#f8f8f2", bold = true },
   ],
   ["state_text", { token = "$wt", fg = "#ffb86c" }, { token = "$branch", fg = "#8be9fd" }],
-  [{ token = "terminal_title_stripped", dim = true }, { token = "$model", fg = "#bd93f9" }],
+  [{ token = "$focus", dim = true }],
 ]
 
 [theme]
