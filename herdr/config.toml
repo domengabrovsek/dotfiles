@@ -16,6 +16,7 @@ rows = [
   [
     "state_icon",
     { token = "$repo", fg = "#f8f8f2", bold = true },
+    { token = "machine", fg = "#bd93f9" },
   ],
   ["state_text", { token = "$wt", fg = "#ffb86c" }, { token = "$branch", fg = "#8be9fd" }],
   [{ token = "$focus", fg = "#f1fa8c" }],

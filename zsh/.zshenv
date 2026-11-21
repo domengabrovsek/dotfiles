@@ -18,3 +18,9 @@ if [ -s "$NVM_DIR/alias/default" ]; then
   fi
   unset _NVM_DEFAULT _NVM_LATEST
 fi
+
+# Non-interactive SSH commands, like herdr's remote client, need ~/.local/bin CLIs.
+case ":$PATH:" in
+  *":$HOME/.local/bin:"*) ;;
+  *) export PATH="$HOME/.local/bin:$PATH" ;;
+esac
