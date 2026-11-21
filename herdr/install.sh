@@ -25,8 +25,8 @@ echo "[ok] $TARGET -> $SCRIPT_DIR/config.toml"
 # herdr keeps the spaces/agents split per client in its state dir, not in
 # config.toml, and only writes that file after a resize. Its name is the FNV-1a
 # hash of the client socket path, so the installer can create it on a fresh
-# machine. 0.1 is herdr's minimum, which leaves the most room for agents.
-SECTION_SPLIT=0.1
+# machine. 0.3 fits the Local, pi5, pi4 and air groups above the agent list.
+SECTION_SPLIT=0.3
 STATE_DIR="${XDG_STATE_HOME:-$HOME/.local/state}/herdr/client-shell"
 python3 - "$STATE_DIR" "$HERDR_DIR/herdr-client.sock" "$SECTION_SPLIT" <<'PY'
 import glob, json, os, sys
